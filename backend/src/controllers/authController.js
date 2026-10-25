@@ -80,6 +80,39 @@ const login = async (req, res) => {
     console.error('Error en login:', error);
     return res.status(500).json({ message: 'Error interno del servidor' });
   }
+  const register = async (req, res) => {
+  const { nombre, email, password, rol_id } = req.body;
+
+  if (!nombre || !email || !password) {
+    return res.status(400).json({ message: 'Nombre, email y contraseña son requeridos' });
+  }
+
+  try {
+    const [existe] = await db.query('SELECT id FROM usuarios WHERE email = ?', [email]);
+
+    if (existe.length > 0) {
+      return res.status(400).json({ message: 'El email ya está registrado' });
+    }
+
+    const hash = await bcrypt.hash(password, 10);
+
+    const [resultado] = await db.query(
+      'INSERT INTO usuarios (nombre, email, password, rol_id) VALUES (?, ?, ?, ?)',
+      [nombre, email, hash, rol_id || 2]
+    );
+
+    return res.status(201).json({
+      id: resultado.insertId,
+      nombre,
+      email,
+      rol_id: rol_id || 2
+    });
+  } catch (error) {
+    console.error('Error en register:', error);
+    return res.status(500).json({ message: 'Error interno del servidor' });
+  }
+};
+
 };
 module.exports = { login, register };
 
