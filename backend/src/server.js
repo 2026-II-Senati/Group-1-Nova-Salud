@@ -2,6 +2,7 @@ require("dotenv").config();
 const express = require('express');
 const authRoutes = require('./routes/authRoutes');
 const productosRoutes = require('./routes/productosRoutes');
+const rolesRoutes = require('./routes/rolesRoutes');
 const usuarioRoutes = require('./routes/usuarioRoutes');
 const pool = require("./db");
 const cors = require('cors');
@@ -23,6 +24,7 @@ app.get("/health", async (_request, response) => {
 });
 app.use('/api/auth', authRoutes);
 app.use('/api/productos', productosRoutes);
+app.use('/api/roles', rolesRoutes);
 app.use('/api', usuarioRoutes);
 app.listen(port, () => {
   console.log(`Nova Salud API activa en http://localhost:${port}`);
