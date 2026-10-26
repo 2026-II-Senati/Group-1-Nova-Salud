@@ -10,4 +10,32 @@ const listar = async (req, res) => {
   }
 };
 
-module.exports = { listar };
+const actualizar = async (req, res) => {
+  const { id } = req.params;
+  const { nombre, precio, stock, stock_minimo, categoria_id, proveedor_id } = req.body;
+
+  if (!nombre || !nombre.trim() || precio === undefined || stock === undefined || stock_minimo === undefined) {
+    return res.status(400).json({ message: 'Faltan datos del producto' });
+  }
+
+  try {
+    const [existe] = await db.query('SELECT id FROM productos WHERE id = ?', [id]);
+
+    if (existe.length === 0) {
+      return res.status(404).json({ message: 'Producto no encontrado' });
+    }
+
+    await db.query(
+      'UPDATE productos SET nombre = ?, precio = ?, stock = ?, stock_minimo = ?, categoria_id = ?, proveedor_id = ? WHERE id = ?',
+      [nombre.trim(), precio, stock, stock_minimo, categoria_id || null, proveedor_id || null, id]
+    );
+
+    const [rows] = await db.query('SELECT * FROM productos WHERE id = ?', [id]);
+    res.status(200).json(rows[0]);
+  } catch (error) {
+    console.error('Error en PUT /api/productos/:id:', error);
+    res.status(500).json({ message: 'Error interno del servidor' });
+  }
+};
+
+module.exports = { listar, actualizar };
