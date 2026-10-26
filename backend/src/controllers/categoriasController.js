@@ -38,5 +38,29 @@ const crear = async (req, res) => {
     res.status(500).json({ message: 'Error interno del servidor' });
   }
 };
+const editar = async (req, res) => {
+  const { id } = req.params;
+  const { nombre } = req.body;
 
-module.exports = { listar , crear };
+  if (!nombre || !nombre.trim()) {
+    return res.status(400).json({ message: 'El nombre es requerido' });
+  }
+
+  try {
+    const [resultado] = await db.query(
+      'UPDATE categorias SET nombre = ? WHERE id = ?',
+      [nombre.trim(), id]
+    );
+
+    if (resultado.affectedRows === 0) {
+      return res.status(404).json({ message: 'Categoría no encontrada' });
+    }
+
+    res.json({ id: Number(id), nombre: nombre.trim() });
+  } catch (error) {
+    console.error('Error en PUT /api/categorias:', error);
+    res.status(500).json({ message: 'Error interno del servidor' });
+  }
+};
+
+module.exports = { listar , crear, editar };
