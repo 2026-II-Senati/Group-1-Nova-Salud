@@ -1,14 +1,6 @@
 import { Routes, Route, Navigate } from 'react-router-dom';
 import ProtectedRoute from './components/ProtectedRoute';
-
-function Login() {
-  return (
-    <div style={{ padding: '20px', fontFamily: 'sans-serif' }}>
-      <h2>Página de Login (Pública)</h2>
-      <p>Inicia sesión para continuar.</p>
-    </div>
-  );
-}
+import Login from './pages/Login'
 
 function Dashboard() {
   return (
