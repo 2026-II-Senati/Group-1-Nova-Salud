@@ -19,6 +19,7 @@ CREATE TABLE usuarios (
   email VARCHAR(150) NOT NULL,
   password VARCHAR(255) NOT NULL,
   rol_id INT,
+  activo BOOLEAN DEFAULT TRUE,
   FOREIGN KEY (rol_id) REFERENCES roles(id)
 );
 
@@ -71,8 +72,8 @@ INSERT INTO proveedores (nombre) VALUES
 ('Distribuidora Lima SAC'), ('Farmacéutica del Norte'), ('Import Pharma EIRL');
 
 INSERT INTO usuarios (nombre, email, password, rol_id) VALUES
-('Cristhian', 'admin@novasalud.com', 'temporal', 1),
-('Vendedor Prueba', 'vendedor@novasalud.com', 'temporal', 2);
+('Cristhian', 'admin@novasalud.com', '$2b$10$oZ7UaxqH4.EJaf4HBI2ylOSaHIy.BebAAVsBLJg9ar1qWL1L8V/MC', 1),
+('Vendedor Prueba', 'vendedor@novasalud.com', '$2b$10$oZ7UaxqH4.EJaf4HBI2ylOSaHIy.BebAAVsBLJg9ar1qWL1L8V/MC', 2);
 
 INSERT INTO productos (nombre, precio, stock, stock_minimo, categoria_id, proveedor_id) VALUES
 ('Paracetamol 500mg', 0.50, 120, 20, 1, 1),
