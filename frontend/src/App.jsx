@@ -1,4 +1,5 @@
 import { Routes, Route } from "react-router-dom";
+import Inventario from "./pages/Inventario";
 
 function App() {
   return (
@@ -11,6 +12,7 @@ function App() {
           </h1>
         }
       />
+      <Route path="/inventario" element={<Inventario />} />
     </Routes>
   );
 }
