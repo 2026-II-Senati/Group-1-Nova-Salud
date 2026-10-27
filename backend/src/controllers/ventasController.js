@@ -7,6 +7,24 @@ const registrar = async (req, res) => {
     return res.status(400).json({ message: 'usuario_id y productos son requeridos' });
   }
 
+  for (const item of productos) {
+    if (!item.producto_id || !Number.isInteger(item.cantidad) || item.cantidad <= 0) {
+      return res.status(400).json({
+        message: 'Cada producto debe tener producto_id y una cantidad entera mayor a cero'
+      });
+    }
+  }
+
+  const agrupados = {};
+  for (const item of productos) {
+    agrupados[item.producto_id] = (agrupados[item.producto_id] || 0) + item.cantidad;
+  }
+
+  const items = Object.entries(agrupados).map(([id, cantidad]) => ({
+    producto_id: Number(id),
+    cantidad
+  }));
+
   const conexion = await db.getConnection();
 
   try {
@@ -15,9 +33,9 @@ const registrar = async (req, res) => {
     let total = 0;
     const detalle = [];
 
-    for (const item of productos) {
+    for (const item of items) {
       const [filas] = await conexion.query(
-        'SELECT id, nombre, precio, stock FROM productos WHERE id = ?',
+        'SELECT id, nombre, precio, stock FROM productos WHERE id = ? FOR UPDATE',
         [item.producto_id]
       );
 
