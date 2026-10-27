@@ -62,4 +62,26 @@ const crear = async (req, res) => {
   }
 };
 
-module.exports = { listar, actualizar, crear };
+const eliminar = async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const [existe] = await db.query('SELECT id FROM productos WHERE id = ?', [id]);
+
+    if (existe.length === 0) {
+      return res.status(404).json({ message: 'Producto no encontrado' });
+    }
+
+    await db.query('DELETE FROM productos WHERE id = ?', [id]);
+    res.json({ mensaje: 'Producto eliminado' });
+  } catch (error) {
+    if (error.code === 'ER_ROW_IS_REFERENCED_2' || error.errno === 1451) {
+      return res.status(400).json({ message: 'El producto tiene ventas registradas' });
+    }
+
+    console.error('Error en DELETE /api/productos/:id:', error);
+    res.status(500).json({ message: 'Error interno del servidor' });
+  }
+};
+
+module.exports = { listar, actualizar, crear, eliminar };
