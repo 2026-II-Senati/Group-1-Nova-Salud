@@ -84,4 +84,20 @@ const eliminar = async (req, res) => {
   }
 };
 
-module.exports = { listar, actualizar, crear, eliminar };
+const buscar = async (req, res) => {
+  const { q } = req.query;
+
+  if (!q || !q.trim()) {
+    return res.status(400).json({ message: 'Falta el termino de busqueda' });
+  }
+
+  try {
+    const [rows] = await db.query('SELECT * FROM productos WHERE nombre LIKE ?', [`%${q.trim()}%`]);
+    res.json(rows);
+  } catch (error) {
+    console.error('Error en GET /api/productos/buscar:', error);
+    res.status(500).json({ message: 'Error interno del servidor' });
+  }
+};
+
+module.exports = { listar, actualizar, crear, eliminar, buscar };
