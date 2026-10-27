@@ -1,8 +1,14 @@
-const cors = require('cors');
 require("dotenv").config();
 const express = require('express');
 const authRoutes = require('./routes/authRoutes');
+const productosRoutes = require('./routes/productosRoutes');
+const rolesRoutes = require('./routes/rolesRoutes');
+const categoriasRoutes = require('./routes/categoriasRoutes');
+const usuarioRoutes = require('./routes/usuarioRoutes');
+const ventasRoutes = require('./routes/ventasRoutes');
+
 const pool = require("./db");
+const cors = require('cors');
 
 const app = express();
 app.use(cors());
@@ -19,29 +25,12 @@ app.get("/health", async (_request, response) => {
     response.status(503).json({ database: "No se pudo conectar" });
   }
 });
-
-app.get("/api/productos", async (_request, response) => {
-  try {
-    const [rows] = await pool.query(`
-      SELECT 
-        p.id, 
-        p.nombre, 
-        p.precio, 
-        p.stock, 
-        p.stock_minimo, 
-        c.nombre AS categoria
-      FROM productos p
-      LEFT JOIN categorias c ON p.categoria_id = c.id
-    `);
-    response.json(rows);
-  } catch (error) {
-    console.error("Error al obtener productos de MySQL:", error);
-    response.status(500).json({ error: error.message });
-  }
-});
-
 app.use('/api/auth', authRoutes);
-
+app.use('/api/productos', productosRoutes);
+app.use('/api/roles', rolesRoutes);
+app.use('/api/categorias', categoriasRoutes);
+app.use('/api', usuarioRoutes);
+app.use('/api/ventas', ventasRoutes);
 app.listen(port, () => {
   console.log(`Nova Salud API activa en http://localhost:${port}`);
 });
