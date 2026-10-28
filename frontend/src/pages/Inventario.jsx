@@ -8,7 +8,7 @@ const Inventario = () => {
   const [categorias, setCategorias] = useState([]);
   const [modalAbierto, setModalAbierto] = useState(false);
 
-  useEffect(() => {
+  const cargarDatos = () =>
     Promise.all([
       fetch("http://localhost:3000/api/productos"),
       fetch("http://localhost:3000/api/categorias"),
@@ -31,6 +31,9 @@ const Inventario = () => {
         setError("No se pudo conectar con el servidor.");
       })
       .finally(() => setLoading(false));
+
+  useEffect(() => {
+    cargarDatos();
   }, []);
 
   const nombreCategoria = (id) =>
@@ -148,6 +151,7 @@ const Inventario = () => {
       <ModalProducto
         abierto={modalAbierto}
         categorias={categorias}
+        onGuardado={cargarDatos}
         onCerrar={() => setModalAbierto(false)}
       />
     </main>
