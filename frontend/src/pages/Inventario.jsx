@@ -1,10 +1,12 @@
 import React, { useEffect, useState } from "react";
+import ModalProducto from "../components/ModalProducto";
 
 const Inventario = () => {
   const [productos, setProductos] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [categorias, setCategorias] = useState([]);
+  const [modalAbierto, setModalAbierto] = useState(false);
 
   useEffect(() => {
     Promise.all([
@@ -72,6 +74,14 @@ const Inventario = () => {
             </div>
           </div>
         )}
+
+        <button
+          type="button"
+          onClick={() => setModalAbierto(true)}
+          className="ml-auto min-h-11 rounded-lg bg-teal-700 px-4 text-sm font-semibold text-white hover:bg-teal-800"
+        >
+          Nuevo producto
+        </button>
       </div>
 
       <div className="overflow-x-auto rounded-xl border border-slate-200 bg-white">
@@ -134,6 +144,12 @@ const Inventario = () => {
           </tbody>
         </table>
       </div>
+
+      <ModalProducto
+        abierto={modalAbierto}
+        categorias={categorias}
+        onCerrar={() => setModalAbierto(false)}
+      />
     </main>
   );
 };
