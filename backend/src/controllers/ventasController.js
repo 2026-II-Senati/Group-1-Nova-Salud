@@ -91,5 +91,16 @@ const registrar = async (req, res) => {
     conexion.release();
   }
 };
+const listar = async (req, res) => {
+  try {
+    const [rows] = await db.query(
+      'SELECT id, fecha, total, usuario_id FROM ventas ORDER BY fecha DESC'
+    );
+    res.json(rows);
+  } catch (error) {
+    console.error('Error en GET /api/ventas:', error);
+    res.status(500).json({ message: 'Error interno del servidor' });
+  }
+};
 
-module.exports = { registrar };
+module.exports = { registrar, listar };
