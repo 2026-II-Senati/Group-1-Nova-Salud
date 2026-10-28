@@ -4,27 +4,35 @@ const Inventario = () => {
   const [productos, setProductos] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [categorias, setCategorias] = useState([]);
 
   useEffect(() => {
-    fetch('http://localhost:3000/api/productos')
-      .then((res) => {
-        if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
-        return res.json();
-      })
-      .then((data) => {
-        if (Array.isArray(data)) {
-          setProductos(data);
-        } else {
-          setError('El backend no devolvió una lista válida.');
+    Promise.all([
+      fetch('http://localhost:3000/api/productos'),
+      fetch('http://localhost:3000/api/categorias'),
+    ])
+      .then(async ([resProd, resCat]) => {
+        if (!resProd.ok || !resCat.ok) {
+          throw new Error('Error del servidor');
         }
-        setLoading(false);
+        const prods = await resProd.json();
+        const cats = await resCat.json();
+        if (!Array.isArray(prods)) {
+          setError('El backend no devolvió una lista válida.');
+          return;
+        }
+        setProductos(prods);
+        setCategorias(Array.isArray(cats) ? cats : []);
       })
       .catch((err) => {
-        console.error('Error al cargar productos:', err);
+        console.error('Error al cargar el inventario:', err);
         setError('No se pudo conectar con el servidor.');
-        setLoading(false);
-      });
+      })
+      .finally(() => setLoading(false));
   }, []);
+
+  const nombreCategoria = (id) =>
+    categorias.find((c) => c.id === id)?.nombre || '-';
 
   if (loading) return <p style={{ padding: '24px' }}>Cargando inventario...</p>;
   if (error) return <p style={{ padding: '24px', color: 'red' }}>Error: {error}</p>;
@@ -56,7 +64,7 @@ const Inventario = () => {
                 }}
               >
                 <td style={tdStyle}>{prod.nombre}</td>
-                <td style={tdStyle}>{prod.categoria || '-'}</td>
+                <td style={tdStyle}>{nombreCategoria(prod.categoria_id)}</td>
                 <td style={tdStyle}>S/. {Number(prod.precio).toFixed(2)}</td>
                 <td style={tdStyle}>{prod.stock}</td>
                 <td style={tdStyle}>{prod.stock_minimo}</td>
