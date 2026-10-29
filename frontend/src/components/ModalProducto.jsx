@@ -9,14 +9,6 @@ const FORMULARIO_VACIO = {
   proveedor_id: "",
 };
 
-// TEMPORAL: ids de nova_salud.sql. Cambiar por GET /api/proveedores cuando
-// esté lista la T33.
-const PROVEEDORES_PRUEBA = [
-  { id: 1, nombre: "Distribuidora Lima SAC" },
-  { id: 2, nombre: "Farmacéutica del Norte" },
-  { id: 3, nombre: "Import Pharma EIRL" },
-];
-
 const CAMPOS = [
   { name: "nombre", label: "Nombre", type: "text" },
   { name: "precio", label: "Precio (S/)", type: "number", step: "0.01" },
@@ -55,7 +47,13 @@ function MensajeError({ id, texto }) {
   );
 }
 
-function ModalProducto({ abierto, categorias, onCerrar, onGuardado }) {
+function ModalProducto({
+  abierto,
+  categorias,
+  proveedores,
+  onCerrar,
+  onGuardado,
+}) {
   const [form, setForm] = useState(FORMULARIO_VACIO);
   const [errores, setErrores] = useState({});
   const [enviando, setEnviando] = useState(false);
@@ -190,7 +188,7 @@ function ModalProducto({ abierto, categorias, onCerrar, onGuardado }) {
               className={claseCampo(errores.proveedor_id)}
             >
               <option value="">Selecciona un proveedor</option>
-              {PROVEEDORES_PRUEBA.map((p) => (
+              {proveedores.map((p) => (
                 <option key={p.id} value={p.id}>
                   {p.nombre}
                 </option>
