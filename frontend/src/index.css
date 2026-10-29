@@ -1,1 +1,23 @@
 @import "tailwindcss";
+
+@keyframes ecg-draw {
+    from {
+        stroke-dashoffset: 100;
+    }
+
+    to {
+        stroke-dashoffset: 0;
+    }
+}
+
+.ecg-line {
+    stroke-dasharray: 100;
+    animation: ecg-draw 1.2s linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .ecg-line {
+        animation: none;
+        stroke-dasharray: none;
+    }
+}
