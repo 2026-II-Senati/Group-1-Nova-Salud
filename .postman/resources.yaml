@@ -1,0 +1,7 @@
+# Use this workspace to collaborate
+workspace:
+  id: 285317f8-851d-4852-8c3d-0d22238a8779
+
+localResources:
+  collections:
+    - ../backend/Nova-Salud Auth Tests
