@@ -1,34 +1,43 @@
 import React, { useEffect, useState } from "react";
+import ModalProducto from "../components/ModalProducto";
 
 const Inventario = () => {
   const [productos, setProductos] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [categorias, setCategorias] = useState([]);
+  const [modalAbierto, setModalAbierto] = useState(false);
+  const [proveedores, setProveedores] = useState([]);
 
-  useEffect(() => {
+  const cargarDatos = () =>
     Promise.all([
       fetch("http://localhost:3000/api/productos"),
       fetch("http://localhost:3000/api/categorias"),
+      fetch("http://localhost:3000/api/proveedores"),
     ])
-      .then(async ([resProd, resCat]) => {
-        if (!resProd.ok || !resCat.ok) {
+      .then(async ([resProd, resCat, resProv]) => {
+        if (!resProd.ok || !resCat.ok || !resProv.ok) {
           throw new Error("Error del servidor");
         }
         const prods = await resProd.json();
         const cats = await resCat.json();
+        const provs = await resProv.json();
         if (!Array.isArray(prods)) {
           setError("El backend no devolvió una lista válida.");
           return;
         }
         setProductos(prods);
         setCategorias(Array.isArray(cats) ? cats : []);
+        setProveedores(Array.isArray(provs) ? provs : []);
       })
       .catch((err) => {
         console.error("Error al cargar el inventario:", err);
         setError("No se pudo conectar con el servidor.");
       })
       .finally(() => setLoading(false));
+
+  useEffect(() => {
+    cargarDatos();
   }, []);
 
   const nombreCategoria = (id) =>
@@ -72,6 +81,14 @@ const Inventario = () => {
             </div>
           </div>
         )}
+
+        <button
+          type="button"
+          onClick={() => setModalAbierto(true)}
+          className="ml-auto min-h-11 rounded-lg bg-teal-700 px-4 text-sm font-semibold text-white hover:bg-teal-800"
+        >
+          Nuevo producto
+        </button>
       </div>
 
       <div className="overflow-x-auto rounded-xl border border-slate-200 bg-white">
@@ -134,6 +151,14 @@ const Inventario = () => {
           </tbody>
         </table>
       </div>
+
+      <ModalProducto
+        abierto={modalAbierto}
+        categorias={categorias}
+        onGuardado={cargarDatos}
+        onCerrar={() => setModalAbierto(false)}
+        proveedores={proveedores}
+      />
     </main>
   );
 };
