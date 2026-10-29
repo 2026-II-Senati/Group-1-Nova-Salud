@@ -1,8 +1,7 @@
-import { Routes, Route, Navigate } from "react-router-dom";
-import Login from "./pages/Login";
-import Inventario from "./pages/Inventario";
-import Proveedores from "./pages/Proveedores";
-import ProtectedRoute from "./components/ProtectedRoute";
+import { Routes, Route, Navigate } from 'react-router-dom';
+import ProtectedRoute from './components/ProtectedRoute';
+import Login from './pages/Login';
+import Inventario from './pages/Inventario';
 
 function Dashboard() {
   return (
@@ -19,16 +18,15 @@ function App() {
       {/* Ruta pública de login */}
       <Route path="/login" element={<Login />} />
 
-      {/* Vistas principales */}
+      {/* Vista de inventario (T25) */}
       <Route path="/inventario" element={<Inventario />} />
-      <Route path="/proveedores" element={<Proveedores />} />
 
       {/* Rutas privadas envueltas con ProtectedRoute */}
       <Route element={<ProtectedRoute />}>
         <Route path="/dashboard" element={<Dashboard />} />
       </Route>
 
-      {/* Redirección por defecto */}
+      {/* Cualquier otra ruta redirige a dashboard */}
       <Route path="*" element={<Navigate to="/dashboard" replace />} />
     </Routes>
   );
