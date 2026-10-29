@@ -1,5 +1,6 @@
 import { Routes, Route } from "react-router-dom";
 import Inventario from "./pages/Inventario";
+import Proveedores from "./pages/Proveedores";
 
 function App() {
   return (
@@ -13,6 +14,7 @@ function App() {
         }
       />
       <Route path="/inventario" element={<Inventario />} />
+      <Route path="/proveedores" element={<Proveedores />} />
     </Routes>
   );
 }

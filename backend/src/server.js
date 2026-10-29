@@ -55,7 +55,6 @@ app.post("/api/productos", async (req, res) => {
   try {
     const { nombre, precio, stock, stock_minimo, categoria_id, proveedor_id } = req.body;
 
-    // Validación de campos obligatorios -> 400 Bad Request
     if (!nombre || precio == null || stock == null || stock_minimo == null) {
       return res.status(400).json({ message: "Faltan datos obligatorios en el body" });
     }
@@ -116,6 +115,61 @@ app.delete("/api/productos/:id", async (req, res) => {
     res.json({ message: "Producto eliminado exitosamente" });
   } catch (error) {
     console.error("Error en DELETE /api/productos:", error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.get("/api/proveedores", async (_req, res) => {
+  try {
+    const [rows] = await pool.query("SELECT * FROM proveedores");
+    res.json(rows);
+  } catch (error) {
+    console.error("Error en GET /api/proveedores:", error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.post("/api/proveedores", async (req, res) => {
+  try {
+    const { nombre } = req.body;
+
+    if (!nombre || !nombre.trim()) {
+      return res.status(400).json({ message: "El nombre del proveedor es obligatorio" });
+    }
+
+    const [result] = await pool.query(
+      `INSERT INTO proveedores (nombre) VALUES (?)`,
+      [nombre.trim()]
+    );
+
+    res.status(201).json({ id: result.insertId, message: "Proveedor creado exitosamente" });
+  } catch (error) {
+    console.error("Error en POST /api/proveedores:", error);
+    res.status(500).json({ 
+      error: error.message, 
+      message: `Error en la base de datos: ${error.sqlMessage || error.message}` 
+    });
+  }
+});
+
+app.delete("/api/proveedores/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const [exist] = await pool.query("SELECT id FROM proveedores WHERE id = ?", [id]);
+    if (exist.length === 0) {
+      return res.status(404).json({ message: "Proveedor no encontrado" });
+    }
+
+    const [productos] = await pool.query("SELECT id FROM productos WHERE proveedor_id = ? LIMIT 1", [id]);
+    if (productos.length > 0) {
+      return res.status(400).json({ message: "No se puede eliminar un proveedor con productos asociados" });
+    }
+
+    await pool.query("DELETE FROM proveedores WHERE id = ?", [id]);
+    res.json({ message: "Proveedor eliminado exitosamente" });
+  } catch (error) {
+    console.error("Error en DELETE /api/proveedores:", error);
     res.status(500).json({ error: error.message });
   }
 });
