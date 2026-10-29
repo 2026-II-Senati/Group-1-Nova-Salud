@@ -16,6 +16,18 @@ const CAMPOS = [
   { name: "stock_minimo", label: "Stock mínimo", type: "number" },
 ];
 
+const formDesdeProducto = (p) =>
+  p
+    ? {
+        nombre: p.nombre ?? "",
+        precio: String(p.precio ?? ""),
+        stock: String(p.stock ?? ""),
+        stock_minimo: String(p.stock_minimo ?? ""),
+        categoria_id: p.categoria_id ? String(p.categoria_id) : "",
+        proveedor_id: p.proveedor_id ? String(p.proveedor_id) : "",
+      }
+    : FORMULARIO_VACIO;
+
 const claseCampo = (hayError) =>
   `w-full min-h-11 rounded-lg border px-3 text-sm ${
     hayError ? "border-red-700" : "border-slate-300"
@@ -48,29 +60,21 @@ function MensajeError({ id, texto }) {
 }
 
 function ModalProducto({
-  abierto,
+  producto,
   categorias,
   proveedores,
   onCerrar,
   onGuardado,
 }) {
-  const [form, setForm] = useState(FORMULARIO_VACIO);
+  const editando = Boolean(producto);
+  const [form, setForm] = useState(() => formDesdeProducto(producto));
   const [errores, setErrores] = useState({});
   const [enviando, setEnviando] = useState(false);
   const [errorServidor, setErrorServidor] = useState("");
 
-  if (!abierto) return null;
-
   const cambiar = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
     setErrores({ ...errores, [e.target.name]: undefined });
-  };
-
-  const cerrar = () => {
-    setForm(FORMULARIO_VACIO);
-    setErrores({});
-    setErrorServidor("");
-    onCerrar();
   };
 
   const guardar = async (e) => {
@@ -82,8 +86,11 @@ function ModalProducto({
     setEnviando(true);
     setErrorServidor("");
     try {
-      const res = await fetch("http://localhost:3000/api/productos", {
-        method: "POST",
+      const url = editando
+        ? `http://localhost:3000/api/productos/${producto.id}`
+        : "http://localhost:3000/api/productos";
+      const res = await fetch(url, {
+        method: editando ? "PUT" : "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           nombre: form.nombre.trim(),
@@ -99,7 +106,7 @@ function ModalProducto({
         throw new Error(data.message || "No se pudo guardar el producto.");
       }
       await onGuardado();
-      cerrar();
+      onCerrar();
     } catch (err) {
       setErrorServidor(
         err instanceof TypeError
@@ -124,7 +131,7 @@ function ModalProducto({
         className="w-full max-w-md rounded-xl bg-white p-6 shadow-xl"
       >
         <h2 id="titulo-modal" className="mb-4 text-xl font-bold">
-          Nuevo producto
+          {editando ? "Editar producto" : "Nuevo producto"}
         </h2>
 
         <div className="flex flex-col gap-4">
@@ -210,7 +217,7 @@ function ModalProducto({
         <div className="mt-6 flex justify-end gap-3">
           <button
             type="button"
-            onClick={cerrar}
+            onClick={onCerrar}
             className="min-h-11 rounded-lg border border-slate-300 px-4 text-sm font-semibold"
           >
             Cancelar

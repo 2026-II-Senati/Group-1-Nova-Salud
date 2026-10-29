@@ -6,8 +6,9 @@ const Inventario = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [categorias, setCategorias] = useState([]);
-  const [modalAbierto, setModalAbierto] = useState(false);
   const [proveedores, setProveedores] = useState([]);
+  const [modalAbierto, setModalAbierto] = useState(false);
+  const [productoEditando, setProductoEditando] = useState(null);
 
   const cargarDatos = () =>
     Promise.all([
@@ -40,10 +41,21 @@ const Inventario = () => {
     cargarDatos();
   }, []);
 
+  const abrirNuevo = () => {
+    setProductoEditando(null);
+    setModalAbierto(true);
+  };
+
+  const abrirEditar = (prod) => {
+    setProductoEditando(prod);
+    setModalAbierto(true);
+  };
+
   const nombreCategoria = (id) =>
     categorias.find((c) => c.id === id)?.nombre || "-";
 
   const bajos = productos.filter((p) => p.stock < p.stock_minimo);
+
   if (loading)
     return <p className="p-6 text-slate-600">Cargando inventario...</p>;
   if (error)
@@ -84,7 +96,7 @@ const Inventario = () => {
 
         <button
           type="button"
-          onClick={() => setModalAbierto(true)}
+          onClick={abrirNuevo}
           className="ml-auto min-h-11 rounded-lg bg-teal-700 px-4 text-sm font-semibold text-white hover:bg-teal-800"
         >
           Nuevo producto
@@ -112,6 +124,9 @@ const Inventario = () => {
               </th>
               <th scope="col" className="px-4 py-3 font-semibold">
                 Estado
+              </th>
+              <th scope="col" className="px-4 py-3 font-semibold">
+                Acciones
               </th>
             </tr>
           </thead>
@@ -145,6 +160,16 @@ const Inventario = () => {
                       {bajoStock ? "Stock bajo" : "Stock normal"}
                     </span>
                   </td>
+                  <td className="px-4 py-3">
+                    <button
+                      type="button"
+                      onClick={() => abrirEditar(prod)}
+                      aria-label={`Editar ${prod.nombre}`}
+                      className="rounded-lg border border-slate-300 bg-white px-3 py-1 text-xs font-semibold text-slate-800 hover:bg-slate-100"
+                    >
+                      Editar
+                    </button>
+                  </td>
                 </tr>
               );
             })}
@@ -152,13 +177,15 @@ const Inventario = () => {
         </table>
       </div>
 
-      <ModalProducto
-        abierto={modalAbierto}
-        categorias={categorias}
-        onGuardado={cargarDatos}
-        onCerrar={() => setModalAbierto(false)}
-        proveedores={proveedores}
-      />
+      {modalAbierto && (
+        <ModalProducto
+          producto={productoEditando}
+          categorias={categorias}
+          proveedores={proveedores}
+          onGuardado={cargarDatos}
+          onCerrar={() => setModalAbierto(false)}
+        />
+      )}
     </main>
   );
 };
