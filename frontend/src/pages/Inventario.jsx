@@ -1,40 +1,61 @@
 import React, { useEffect, useState } from "react";
+import ModalProducto from "../components/ModalProducto";
 
 const Inventario = () => {
   const [productos, setProductos] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [categorias, setCategorias] = useState([]);
+  const [proveedores, setProveedores] = useState([]);
+  const [modalAbierto, setModalAbierto] = useState(false);
+  const [productoEditando, setProductoEditando] = useState(null);
 
-  useEffect(() => {
+  const cargarDatos = () =>
     Promise.all([
       fetch("http://localhost:3000/api/productos"),
       fetch("http://localhost:3000/api/categorias"),
+      fetch("http://localhost:3000/api/proveedores"),
     ])
-      .then(async ([resProd, resCat]) => {
-        if (!resProd.ok || !resCat.ok) {
+      .then(async ([resProd, resCat, resProv]) => {
+        if (!resProd.ok || !resCat.ok || !resProv.ok) {
           throw new Error("Error del servidor");
         }
         const prods = await resProd.json();
         const cats = await resCat.json();
+        const provs = await resProv.json();
         if (!Array.isArray(prods)) {
           setError("El backend no devolvió una lista válida.");
           return;
         }
         setProductos(prods);
         setCategorias(Array.isArray(cats) ? cats : []);
+        setProveedores(Array.isArray(provs) ? provs : []);
       })
       .catch((err) => {
         console.error("Error al cargar el inventario:", err);
         setError("No se pudo conectar con el servidor.");
       })
       .finally(() => setLoading(false));
+
+  useEffect(() => {
+    cargarDatos();
   }, []);
+
+  const abrirNuevo = () => {
+    setProductoEditando(null);
+    setModalAbierto(true);
+  };
+
+  const abrirEditar = (prod) => {
+    setProductoEditando(prod);
+    setModalAbierto(true);
+  };
 
   const nombreCategoria = (id) =>
     categorias.find((c) => c.id === id)?.nombre || "-";
 
   const bajos = productos.filter((p) => p.stock < p.stock_minimo);
+
   if (loading)
     return <p className="p-6 text-slate-600">Cargando inventario...</p>;
   if (error)
@@ -72,6 +93,14 @@ const Inventario = () => {
             </div>
           </div>
         )}
+
+        <button
+          type="button"
+          onClick={abrirNuevo}
+          className="ml-auto min-h-11 rounded-lg bg-teal-700 px-4 text-sm font-semibold text-white hover:bg-teal-800"
+        >
+          Nuevo producto
+        </button>
       </div>
 
       <div className="overflow-x-auto rounded-xl border border-slate-200 bg-white">
@@ -95,6 +124,9 @@ const Inventario = () => {
               </th>
               <th scope="col" className="px-4 py-3 font-semibold">
                 Estado
+              </th>
+              <th scope="col" className="px-4 py-3 font-semibold">
+                Acciones
               </th>
             </tr>
           </thead>
@@ -128,12 +160,32 @@ const Inventario = () => {
                       {bajoStock ? "Stock bajo" : "Stock normal"}
                     </span>
                   </td>
+                  <td className="px-4 py-3">
+                    <button
+                      type="button"
+                      onClick={() => abrirEditar(prod)}
+                      aria-label={`Editar ${prod.nombre}`}
+                      className="rounded-lg border border-slate-300 bg-white px-3 py-1 text-xs font-semibold text-slate-800 hover:bg-slate-100"
+                    >
+                      Editar
+                    </button>
+                  </td>
                 </tr>
               );
             })}
           </tbody>
         </table>
       </div>
+
+      {modalAbierto && (
+        <ModalProducto
+          producto={productoEditando}
+          categorias={categorias}
+          proveedores={proveedores}
+          onGuardado={cargarDatos}
+          onCerrar={() => setModalAbierto(false)}
+        />
+      )}
     </main>
   );
 };
