@@ -2,13 +2,21 @@ const db = require('../db');
 
 const listar = async (req, res) => {
   try {
-    const [rows] = await db.query('SELECT * FROM productos');
+    const [rows] = await db.query(
+      `SELECT p.id, p.nombre, p.precio, p.stock, p.stock_minimo,
+              p.categoria_id, c.nombre AS categoria,
+              p.proveedor_id
+       FROM productos p
+       LEFT JOIN categorias c ON p.categoria_id = c.id
+       ORDER BY p.id`
+    );
     res.json(rows);
   } catch (error) {
     console.error('Error en GET /api/productos:', error);
     res.status(500).json({ message: 'Error interno del servidor' });
   }
 };
+
 
 const actualizar = async (req, res) => {
   const { id } = req.params;
