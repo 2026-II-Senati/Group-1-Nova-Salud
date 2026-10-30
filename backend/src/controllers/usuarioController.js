@@ -4,6 +4,10 @@ const cambiarEstado = async (req, res) => {
   const { id } = req.params;
   const { activo } = req.body;
 
+  if (req.usuario.rol_id !== 1) {
+    return res.status(403).json({ message: 'Solo un administrador puede cambiar el estado' });
+  }
+
   if (typeof activo !== 'boolean') {
     return res.status(400).json({ message: 'activo debe ser true o false' });
   }
