@@ -1,58 +1,138 @@
 {
   "info": {
-    "_postman_id": "c3b8a1d2-5e4f-4a9b-8c7d-1a2b3c4d5e6f",
-    "name": "Productos - Nova Salud",
+    "name": "Productos - Nova Salud (T28)",
+    "description": "Casos de /api/productos: GET, busqueda, POST, PUT y DELETE, con casos invalidos (id inexistente, body incompleto, producto vendido). Los casos 04 a 09 crean un producto de prueba 'ZZ Prueba T28', lo editan y lo borran, asi que se limpian solos. El caso 11 intenta borrar el producto 1 (Paracetamol), que ya tiene ventas registradas (venta 2): debe responder 400 y NO borrarlo. ATENCION: si alguien cambia la base y quita la restriccion entre ventas y productos, ese caso borraria el producto 1. Ejecutar con Run en orden. No incluye credenciales.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "item": [
     {
-      "name": "1. GET /api/productos (Listar todo)",
+      "name": "01. GET /api/productos (listar) - 200",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Responde 200\", function () {",
+              "  pm.response.to.have.status(200);",
+              "});"
+            ]
+          }
+        }
+      ],
       "request": {
         "method": "GET",
         "header": [],
         "url": {
-          "raw": "http://localhost:3000/api/productos",
-          "protocol": "http",
+          "raw": "{{baseUrl}}/api/productos",
           "host": [
-            "localhost"
+            "{{baseUrl}}"
           ],
-          "port": "3000",
           "path": [
             "api",
             "productos"
           ]
         }
-      },
-      "response": []
+      }
     },
     {
-      "name": "2. GET /api/productos?search=Paracetamol (Búsqueda)",
+      "name": "02. GET /api/productos/buscar?q=para (busqueda) - 200",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Responde 200\", function () {",
+              "  pm.response.to.have.status(200);",
+              "});"
+            ]
+          }
+        }
+      ],
       "request": {
         "method": "GET",
         "header": [],
         "url": {
-          "raw": "http://localhost:3000/api/productos?search=Paracetamol",
-          "protocol": "http",
+          "raw": "{{baseUrl}}/api/productos/buscar?q=para",
           "host": [
-            "localhost"
+            "{{baseUrl}}"
           ],
-          "port": "3000",
           "path": [
             "api",
-            "productos"
+            "productos",
+            "buscar"
           ],
           "query": [
             {
-              "key": "search",
-              "value": "Paracetamol"
+              "key": "q",
+              "value": "para"
             }
           ]
         }
-      },
-      "response": []
+      }
     },
     {
-      "name": "3. POST /api/productos (Crear producto válido - 201)",
+      "name": "03. GET /api/productos/buscar sin q - 400",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Responde 400\", function () {",
+              "  pm.response.to.have.status(400);",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/productos/buscar",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "productos",
+            "buscar"
+          ]
+        }
+      }
+    },
+    {
+      "name": "04. POST /api/productos (crear valido) - 201",
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.collectionVariables.unset(\"productoId\");"
+            ]
+          }
+        },
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Responde 201\", function () {",
+              "  pm.response.to.have.status(201);",
+              "});",
+              "let cuerpo = {};",
+              "try { cuerpo = pm.response.json(); } catch (e) {}",
+              "pm.test(\"Devuelve el id del producto creado\", function () {",
+              "  pm.expect(cuerpo.id).to.be.a(\"number\");",
+              "});",
+              "if (cuerpo && cuerpo.id) { pm.collectionVariables.set(\"productoId\", cuerpo.id); }"
+            ]
+          }
+        }
+      ],
       "request": {
         "method": "POST",
         "header": [
@@ -61,27 +141,42 @@
             "value": "application/json"
           }
         ],
-        "body": {
-          "mode": "raw",
-          "raw": "{\n  \"nombre\": \"Jarabes de prueba\",\n  \"precio\": 12.50,\n  \"stock\": 50,\n  \"stock_minimo\": 10,\n  \"categoria_id\": 1,\n  \"proveedor_id\": 1\n}"
-        },
         "url": {
-          "raw": "http://localhost:3000/api/productos",
-          "protocol": "http",
+          "raw": "{{baseUrl}}/api/productos",
           "host": [
-            "localhost"
+            "{{baseUrl}}"
           ],
-          "port": "3000",
           "path": [
             "api",
             "productos"
           ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"nombre\": \"ZZ Prueba T28\",\n  \"precio\": 5.5,\n  \"stock\": 10,\n  \"stock_minimo\": 5,\n  \"categoria_id\": 1,\n  \"proveedor_id\": 1\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
         }
-      },
-      "response": []
+      }
     },
     {
-      "name": "4. POST /api/productos (Body incompleto - 400)",
+      "name": "05. POST /api/productos body incompleto - 400",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Responde 400\", function () {",
+              "  pm.response.to.have.status(400);",
+              "});"
+            ]
+          }
+        }
+      ],
       "request": {
         "method": "POST",
         "header": [
@@ -90,27 +185,45 @@
             "value": "application/json"
           }
         ],
-        "body": {
-          "mode": "raw",
-          "raw": "{\n  \"nombre\": \"Incompleto\"\n}"
-        },
         "url": {
-          "raw": "http://localhost:3000/api/productos",
-          "protocol": "http",
+          "raw": "{{baseUrl}}/api/productos",
           "host": [
-            "localhost"
+            "{{baseUrl}}"
           ],
-          "port": "3000",
           "path": [
             "api",
             "productos"
           ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"nombre\": \"Incompleto\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
         }
-      },
-      "response": []
+      }
     },
     {
-      "name": "5. PUT /api/productos/1 (Actualizar producto - 200)",
+      "name": "06. PUT /api/productos/{{productoId}} (actualizar) - 200",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Responde 200\", function () {",
+              "  pm.response.to.have.status(200);",
+              "});",
+              "pm.test(\"Devuelve el producto actualizado\", function () {",
+              "  pm.expect(pm.response.json().nombre).to.eql(\"ZZ Prueba T28 editado\");",
+              "});"
+            ]
+          }
+        }
+      ],
       "request": {
         "method": "PUT",
         "header": [
@@ -119,9 +232,223 @@
             "value": "application/json"
           }
         ],
+        "url": {
+          "raw": "{{baseUrl}}/api/productos/{{productoId}}",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "productos",
+            "{{productoId}}"
+          ]
+        },
         "body": {
           "mode": "raw",
-          "raw": "{\n  \"nombre\": \"Paracetamol 500mg Editado\",\n  \"precio\": 0.60,\n  \"stock\": 130,\n  \"stock_minimo\": 20,\n  \"categoria_id\": 1,\n  \"proveedor_id\": 1\n}"
-        },
+          "raw": "{\n  \"nombre\": \"ZZ Prueba T28 editado\",\n  \"precio\": 7.25,\n  \"stock\": 10,\n  \"stock_minimo\": 5,\n  \"categoria_id\": 1,\n  \"proveedor_id\": 1\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "07. PUT /api/productos/99999 id inexistente - 404",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Responde 404\", function () {",
+              "  pm.response.to.have.status(404);",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "PUT",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
         "url": {
-          "raw": "
+          "raw": "{{baseUrl}}/api/productos/99999",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "productos",
+            "99999"
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"nombre\": \"ZZ Prueba T28\",\n  \"precio\": 5.5,\n  \"stock\": 10,\n  \"stock_minimo\": 5,\n  \"categoria_id\": 1,\n  \"proveedor_id\": 1\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "08. PUT /api/productos/99999 body incompleto - 400",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Responde 400\", function () {",
+              "  pm.response.to.have.status(400);",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "PUT",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/productos/99999",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "productos",
+            "99999"
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"nombre\": \"x\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "09. DELETE /api/productos/{{productoId}} (borrar el de prueba) - 200",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Responde 200\", function () {",
+              "  pm.response.to.have.status(200);",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "DELETE",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/productos/{{productoId}}",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "productos",
+            "{{productoId}}"
+          ]
+        }
+      }
+    },
+    {
+      "name": "10. DELETE /api/productos/99999 id inexistente - 404",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Responde 404\", function () {",
+              "  pm.response.to.have.status(404);",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "DELETE",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/productos/99999",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "productos",
+            "99999"
+          ]
+        }
+      }
+    },
+    {
+      "name": "11. DELETE /api/productos/1 (producto con ventas) - 400",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Responde 400\", function () {",
+              "  pm.response.to.have.status(400);",
+              "});",
+              "pm.test(\"Indica que tiene ventas\", function () {",
+              "  pm.expect(pm.response.json().message).to.match(/venta/i);",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "DELETE",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/productos/1",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "productos",
+            "1"
+          ]
+        }
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3000"
+    },
+    {
+      "key": "productoId",
+      "value": ""
+    }
+  ]
+}
