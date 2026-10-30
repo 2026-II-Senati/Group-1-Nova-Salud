@@ -30,7 +30,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/productos', productosRoutes);
 app.use('/api/roles', rolesRoutes);
 app.use('/api/categorias', categoriasRoutes);
-app.use('/api', usuarioRoutes);
+app.use('/api/usuarios', usuarioRoutes);
 app.use('/api/ventas', ventasRoutes);
 app.use('/api/proveedores', proveedoresRoutes);
 
