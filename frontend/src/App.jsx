@@ -2,6 +2,7 @@ import { Routes, Route, Navigate } from 'react-router-dom';
 import ProtectedRoute from './components/ProtectedRoute';
 import Login from './pages/Login';
 import Inventario from './pages/Inventario';
+import Categorias from './pages/Categorias';
 
 function Dashboard() {
   return (
@@ -20,6 +21,9 @@ function App() {
 
       {/* Vista de inventario (T25) */}
       <Route path="/inventario" element={<Inventario />} />
+
+      {/* Vista de categorías (T35) */}
+      <Route path="/categorias" element={<Categorias />} />
 
       {/* Rutas privadas envueltas con ProtectedRoute */}
       <Route element={<ProtectedRoute />}>
