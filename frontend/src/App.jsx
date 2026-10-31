@@ -4,6 +4,7 @@ import Login from './pages/Login';
 import Inventario from './pages/Inventario';
 import Categorias from './pages/Categorias';
 import Proveedores from './pages/Proveedores';
+import Alertas from './pages/Alertas';
 
 function Dashboard() {
   return (
@@ -28,6 +29,9 @@ function App() {
 
       {/* Vista de proveedores (T35) */}
       <Route path="/proveedores" element={<Proveedores />} />
+
+      {/* Vista de alertas de stock (T52) */}
+      <Route path="/alertas" element={<Alertas />} />
 
       {/* Rutas privadas envueltas con ProtectedRoute */}
       <Route element={<ProtectedRoute />}>
