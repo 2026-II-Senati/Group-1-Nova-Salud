@@ -1,8 +1,14 @@
 const express = require('express');
 const router = express.Router();
-const { crear, listar } = require('../controllers/proveedoresController');
 
-router.post('/', crear);
+const {
+  listar,
+  crear,
+  eliminar
+} = require('../controllers/proveedoresController');
+
 router.get('/', listar);
+router.post('/', crear);
+router.delete('/:id', eliminar);
 
 module.exports = router;

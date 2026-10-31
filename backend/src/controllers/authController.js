@@ -43,7 +43,7 @@ const login = async (req, res) => {
   }
 
   try {
-    const [rows] = await db.query('SELECT * FROM usuarios WHERE email = ?', [email]);
+    const [rows] = await db.query('SELECT * FROM usuarios WHERE email = ? AND activo = 1', [email]);
 
     if (rows.length === 0) {
       return res.status(401).json({ message: 'Credenciales inválidas' });

@@ -1,9 +1,10 @@
 # Nova Salud
 
-Sistema web de inventario y ventas para una botica.
+Sistema web de gestión de inventario y ventas para una botica.
+Proyecto del curso PIAD-527.
 
-## Tecnologías
-- Frontend: React + Vite + Tailwind
+## Stack
+- Frontend: React + Vite + Tailwind CSS
 - Backend: Node.js + Express
 - Base de datos: MySQL en Aiven
 - Autenticación: JWT
@@ -11,18 +12,48 @@ Sistema web de inventario y ventas para una botica.
 ## Requisitos
 - Node.js 20 o superior
 - Git
-
-## Cómo levantarlo
-1. Clonar el repositorio
-2. Entrar a `backend/` e instalar dependencias
-3. Copiar `.env.example` a `.env` y completar los datos
-4. Ejecutar el servidor
-5. Entrar a `frontend/` y repetir la instalación
+- Acceso a la base de datos (pedir credenciales al equipo)
 
 ## Estructura
-- `backend/` — API REST
-- `frontend/` — interfaz en React
-- `database/` — script de la base de datos
+backend/    API REST (Express, controllers, routes)
+frontend/   interfaz React (pages, components, services)
+database/   script SQL con tablas y datos de prueba
+docs/       contrato de la API
 
-## Equipo
-[los nombres de los que están trabajando]
+## Base de datos
+El script está en `database/nova_salud.sql`.
+Crea las 8 tablas y carga los datos de prueba.
+
+Las credenciales van en `backend/.env` (no se sube al repositorio).
+Usar `backend/.env.example` como plantilla.
+
+## Backend
+cd backend
+npm install
+npm run dev
+
+Corre en http://localhost:3000
+Verificar con: http://localhost:3000/health
+
+## Frontend
+cd frontend
+npm install
+npm run dev
+
+Corre en http://localhost:5173
+
+## Usuarios de prueba
+admin@novasalud.com / temporal (administrador)
+vendedor@novasalud.com / temporal (vendedor)
+
+## Endpoints principales
+POST /api/auth/register
+POST /api/auth/login
+GET  /api/me
+GET  /api/productos
+POST /api/productos
+GET  /api/categorias
+GET  /api/proveedores
+POST /api/ventas
+GET  /api/alertas
+GET  /api/dashboard/metricas
