@@ -7,6 +7,8 @@ const categoriasRoutes = require('./routes/categoriasRoutes');
 const usuarioRoutes = require('./routes/usuarioRoutes');
 const ventasRoutes = require('./routes/ventasRoutes');
 const proveedoresRoutes = require('./routes/proveedoresRoutes');
+const alertasRoutes = require('./routes/alertasRoutes');
+const dashboardRoutes = require('./routes/dashboardRoutes');
 
 const pool = require("./db");
 const cors = require('cors');
@@ -26,13 +28,9 @@ app.get("/health", async (_request, response) => {
     response.status(503).json({ database: "No se pudo conectar" });
   }
 });
+
 app.use('/api/auth', authRoutes);
 app.use('/api/productos', productosRoutes);
 app.use('/api/roles', rolesRoutes);
 app.use('/api/categorias', categoriasRoutes);
-app.use('/api', usuarioRoutes);
-app.use('/api/ventas', ventasRoutes);
-app.use('/api/proveedores', proveedoresRoutes);
-app.listen(port, () => {
-  console.log(`Nova Salud API activa en http://localhost:${port}`);
-});
+app.use('
