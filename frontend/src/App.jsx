@@ -1,19 +1,11 @@
 import { Routes, Route, Navigate } from 'react-router-dom';
 import ProtectedRoute from './components/ProtectedRoute';
 import Login from './pages/Login';
+import Dashboard from './pages/Dashboard';
 import Inventario from './pages/Inventario';
 import Categorias from './pages/Categorias';
 import Proveedores from './pages/Proveedores';
 import Alertas from './pages/Alertas';
-
-function Dashboard() {
-  return (
-    <div style={{ padding: '20px', fontFamily: 'sans-serif' }}>
-      <h2>Panel de Administración (Ruta Privada Protegida)</h2>
-      <p>Bienvenido al sistema Nova Salud.</p>
-    </div>
-  );
-}
 
 function App() {
   return (
