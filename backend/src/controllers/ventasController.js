@@ -131,5 +131,20 @@ const detalle = async (req, res) => {
   }
 };
 
+const hoy = async (req, res) => {
+  try {
+    const [rows] = await db.query(
+      `SELECT id, fecha, total, usuario_id
+       FROM ventas
+       WHERE DATE(fecha) = CURDATE()
+       ORDER BY fecha DESC`
+    );
+    res.json(rows);
+  } catch (error) {
+    console.error('Error en GET /api/ventas/hoy:', error);
+    res.status(500).json({ message: 'Error interno del servidor' });
+  }
+};
 
-module.exports = { registrar, listar, detalle };
+
+module.exports = { registrar, listar, detalle, hoy };
