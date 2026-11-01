@@ -6,6 +6,7 @@ import Inventario from './pages/Inventario';
 import Categorias from './pages/Categorias';
 import Proveedores from './pages/Proveedores';
 import Alertas from './pages/Alertas';
+import Pos from './pages/Pos';
 
 function App() {
   return (
@@ -24,6 +25,9 @@ function App() {
 
       {/* Vista de alertas de stock (T52) */}
       <Route path="/alertas" element={<Alertas />} />
+
+      {/* Vista del punto de venta (T41) */}
+      <Route path="/pos" element={<Pos />} />
 
       {/* Rutas privadas envueltas con ProtectedRoute */}
       <Route element={<ProtectedRoute />}>
