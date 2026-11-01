@@ -103,4 +103,48 @@ const listar = async (req, res) => {
   }
 };
 
-module.exports = { registrar, listar };
+const detalle = async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const [ventas] = await db.query(
+      'SELECT id, fecha, total, usuario_id FROM ventas WHERE id = ?',
+      [id]
+    );
+
+    if (ventas.length === 0) {
+      return res.status(404).json({ message: 'Venta no encontrada' });
+    }
+
+    const [items] = await db.query(
+      `SELECT p.nombre, dv.cantidad, dv.precio_unitario
+       FROM detalle_venta dv
+       INNER JOIN productos p ON dv.producto_id = p.id
+       WHERE dv.venta_id = ?`,
+      [id]
+    );
+
+    res.json({ ...ventas[0], detalle: items });
+  } catch (error) {
+    console.error('Error en GET /api/ventas/:id:', error);
+    res.status(500).json({ message: 'Error interno del servidor' });
+  }
+};
+
+const hoy = async (req, res) => {
+  try {
+    const [rows] = await db.query(
+      `SELECT id, fecha, total, usuario_id
+       FROM ventas
+       WHERE DATE(fecha) = CURDATE()
+       ORDER BY fecha DESC`
+    );
+    res.json(rows);
+  } catch (error) {
+    console.error('Error en GET /api/ventas/hoy:', error);
+    res.status(500).json({ message: 'Error interno del servidor' });
+  }
+};
+
+
+module.exports = { registrar, listar, detalle, hoy };
