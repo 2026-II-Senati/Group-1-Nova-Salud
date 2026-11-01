@@ -9,6 +9,7 @@ const ventasRoutes = require('./routes/ventasRoutes');
 const proveedoresRoutes = require('./routes/proveedoresRoutes');
 const alertasRoutes = require('./routes/alertasRoutes');
 const dashboardRoutes = require('./routes/dashboardRoutes');
+const movimientosRoutes = require('./routes/movimientosRoutes');
 
 const pool = require("./db");
 const cors = require('cors');
@@ -37,6 +38,7 @@ app.use('/api/ventas', ventasRoutes);
 app.use('/api/proveedores', proveedoresRoutes);
 app.use('/api/alertas', alertasRoutes);
 app.use('/api/dashboard', dashboardRoutes);
+app.use('/api/movimientos', movimientosRoutes);
 
 app.listen(port, () => {
   console.log(`Nova Salud API activa en http://localhost:${port}`);
