@@ -5,12 +5,27 @@ const API = "http://localhost:3000/api/productos";
 const aSoles = (centimos) => (centimos / 100).toFixed(2);
 const centimos = (precio) => Math.round(Number(precio) * 100);
 
+const obtenerUsuarioId = () => {
+  try {
+    const token = localStorage.getItem("token");
+    const cuerpo = token.split(".")[1];
+    const json = atob(cuerpo.replace(/-/g, "+").replace(/_/g, "/"));
+    return JSON.parse(json).id;
+  } catch {
+    return null;
+  }
+};
+
 const Pos = () => {
   const [busqueda, setBusqueda] = useState("");
   const [resultados, setResultados] = useState(null);
   const [buscando, setBuscando] = useState(false);
   const [errorBusqueda, setErrorBusqueda] = useState("");
   const [carrito, setCarrito] = useState([]);
+  const [cobrando, setCobrando] = useState(false);
+  const [errorCobro, setErrorCobro] = useState("");
+  const [ventaRegistrada, setVentaRegistrada] = useState(null);
+  const [ultimaBusqueda, setUltimaBusqueda] = useState("");
 
   const buscar = async (e) => {
     e.preventDefault();
@@ -29,6 +44,7 @@ const Pos = () => {
         throw new Error(data?.message || "No se pudo buscar el producto.");
       }
       setResultados(Array.isArray(data) ? data : []);
+      setUltimaBusqueda(q);
     } catch (err) {
       setResultados(null);
       setErrorBusqueda(
@@ -66,6 +82,58 @@ const Pos = () => {
 
   const quitar = (id) => {
     setCarrito((prev) => prev.filter((i) => i.id !== id));
+  };
+
+  const refrescarResultados = async () => {
+    if (!ultimaBusqueda) return;
+    try {
+      const res = await fetch(
+        `${API}/buscar?q=${encodeURIComponent(ultimaBusqueda)}`,
+      );
+      if (res.ok) setResultados(await res.json());
+    } catch {
+      // si falla, se mantiene la lista anterior
+    }
+  };
+
+  const cobrar = async () => {
+    const usuarioId = obtenerUsuarioId();
+    if (!usuarioId) {
+      setErrorCobro("Inicia sesión para registrar la venta.");
+      return;
+    }
+
+    setCobrando(true);
+    setErrorCobro("");
+    setVentaRegistrada(null);
+    try {
+      const res = await fetch("http://localhost:3000/api/ventas", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          usuario_id: usuarioId,
+          productos: carrito.map((i) => ({
+            producto_id: i.id,
+            cantidad: i.cantidad,
+          })),
+        }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        throw new Error(data.message || "No se pudo registrar la venta.");
+      }
+      setVentaRegistrada(data);
+      setCarrito([]);
+      refrescarResultados();
+    } catch (err) {
+      setErrorCobro(
+        err instanceof TypeError
+          ? "No se pudo conectar con el servidor."
+          : err.message,
+      );
+    } finally {
+      setCobrando(false);
+    }
   };
 
   const totalCentimos = carrito.reduce(
@@ -264,12 +332,32 @@ const Pos = () => {
             </p>
             <button
               type="button"
-              disabled={carrito.length === 0}
+              onClick={cobrar}
+              disabled={carrito.length === 0 || cobrando}
               className="min-h-11 rounded-lg bg-teal-700 px-6 text-sm font-semibold text-white hover:bg-teal-800 disabled:opacity-60"
             >
-              Cobrar
+              {cobrando ? "Cobrando..." : "Cobrar"}
             </button>
           </div>
+
+          {errorCobro && (
+            <p
+              role="alert"
+              className="mt-3 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm font-semibold text-red-800"
+            >
+              {errorCobro}
+            </p>
+          )}
+
+          {ventaRegistrada && (
+            <p
+              role="status"
+              className="mt-3 rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-sm font-semibold text-green-800"
+            >
+              Venta #{ventaRegistrada.venta_id} registrada. Total: S/{" "}
+              {Number(ventaRegistrada.total).toFixed(2)}
+            </p>
+          )}
         </section>
       </div>
     </main>
