@@ -1,5 +1,43 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import ModalProducto from "../components/ModalProducto";
+
+const MedidorStock = ({ stock, minimo }) => {
+  const actual = Number(stock);
+  const piso = Number(minimo);
+  const bajo = actual < piso;
+  const tope = Math.max(piso * 3, 1);
+  const relleno = Math.min(100, (actual / tope) * 100);
+  const marca = piso > 0 ? Math.min(100, (piso / tope) * 100) : null;
+
+  return (
+    <div className="flex items-center gap-3">
+      <div
+        role="img"
+        aria-label={`Stock ${actual}, mínimo ${piso}`}
+        className="relative h-2 w-24 shrink-0 overflow-hidden rounded-full bg-linea"
+      >
+        <div
+          className={`h-full rounded-full ${bajo ? "bg-alerta" : "bg-botica"}`}
+          style={{ width: `${relleno}%` }}
+        />
+        {marca !== null && (
+          <div
+            className="absolute inset-y-0 w-0.5 bg-tinta"
+            style={{ left: `${marca}%` }}
+          />
+        )}
+      </div>
+      <span className="tabular-nums">
+        <b className={bajo ? "text-alerta" : ""}>{actual}</b>
+        <span className="text-tinta-suave"> / mín. {piso}</span>
+      </span>
+      {bajo && (
+        <span className="text-sm font-semibold text-alerta">Stock bajo</span>
+      )}
+    </div>
+  );
+};
 
 const Inventario = () => {
   const [productos, setProductos] = useState([]);
@@ -57,76 +95,53 @@ const Inventario = () => {
   const bajos = productos.filter((p) => p.stock < p.stock_minimo);
 
   if (loading)
-    return <p className="p-6 text-slate-600">Cargando inventario...</p>;
+    return <p className="pagina text-tinta-suave">Cargando inventario...</p>;
   if (error)
     return (
-      <p role="alert" className="p-6 text-red-700">
-        Error: {error}
-      </p>
+      <main className="pagina">
+        <p role="alert" className="mensaje-error">
+          Error: {error}
+        </p>
+      </main>
     );
 
   return (
-    <main className="min-h-screen bg-slate-50 p-4 font-sans text-slate-900 sm:p-8">
+    <main className="pagina">
       <div className="mb-5 flex flex-wrap items-center gap-3">
         <h1 className="text-2xl font-bold sm:text-3xl">Inventario</h1>
 
         {bajos.length > 0 && (
-          <div className="flex h-8 max-w-8 items-center overflow-hidden whitespace-nowrap rounded-full bg-amber-300 shadow transition-[max-width] duration-500 ease-in-out focus-within:max-w-3xl hover:max-w-3xl">
-            <button
-              type="button"
-              aria-label={`${bajos.length} productos con stock bajo`}
-              className="flex h-8 w-8 shrink-0 items-center justify-center text-sm font-bold text-red-700"
-            >
-              {bajos.length}
-            </button>
-
-            <div className="flex items-center gap-3 pr-4 text-sm text-amber-900">
-              <span className="font-semibold">Stock bajo:</span>
-              {bajos.map((p) => (
-                <span key={p.id}>
-                  {p.nombre}{" "}
-                  <b className="text-red-700">
-                    ({p.stock}/{p.stock_minimo})
-                  </b>
-                </span>
-              ))}
-            </div>
-          </div>
+          <Link
+            to="/alertas"
+            className="rounded-full bg-alerta-suave px-3 py-1 text-sm font-semibold text-alerta hover:bg-alerta hover:text-white"
+          >
+            {bajos.length === 1
+              ? "1 producto con stock bajo"
+              : `${bajos.length} productos con stock bajo`}
+          </Link>
         )}
 
         <button
           type="button"
           onClick={abrirNuevo}
-          className="ml-auto min-h-11 rounded-lg bg-teal-700 px-4 text-sm font-semibold text-white hover:bg-teal-800"
+          className="btn btn-primario ml-auto"
         >
           Nuevo producto
         </button>
       </div>
 
-      <div className="overflow-x-auto rounded-xl border border-slate-200 bg-white">
-        <table className="w-full min-w-[640px] text-left text-sm">
-          <thead className="bg-slate-100 text-slate-600">
+      <div className="tabla-contenedor">
+        <table className="tabla min-w-[640px]">
+          <thead>
             <tr>
-              <th scope="col" className="px-4 py-3 font-semibold">
-                Producto
-              </th>
-              <th scope="col" className="px-4 py-3 font-semibold">
-                Categoría
-              </th>
-              <th scope="col" className="px-4 py-3 font-semibold">
+              <th scope="col">Producto</th>
+              <th scope="col">Categoría</th>
+              <th scope="col" className="num">
                 Precio
               </th>
-              <th scope="col" className="px-4 py-3 font-semibold">
-                Stock
-              </th>
-              <th scope="col" className="px-4 py-3 font-semibold">
-                Stock mínimo
-              </th>
-              <th scope="col" className="px-4 py-3 font-semibold">
-                Estado
-              </th>
-              <th scope="col" className="px-4 py-3 font-semibold">
-                Acciones
+              <th scope="col">Stock</th>
+              <th scope="col">
+                <span className="sr-only">Acciones</span>
               </th>
             </tr>
           </thead>
@@ -134,38 +149,22 @@ const Inventario = () => {
             {productos.map((prod) => {
               const bajoStock = prod.stock < prod.stock_minimo;
               return (
-                <tr
-                  key={prod.id}
-                  className={`border-t border-slate-200 ${
-                    bajoStock ? "bg-red-50 font-semibold text-red-800" : ""
-                  }`}
-                >
-                  <td className="px-4 py-3">{prod.nombre}</td>
-                  <td className="px-4 py-3">
-                    {nombreCategoria(prod.categoria_id)}
+                <tr key={prod.id} className={bajoStock ? "fila-alerta" : ""}>
+                  <td className="font-semibold">{prod.nombre}</td>
+                  <td>{nombreCategoria(prod.categoria_id)}</td>
+                  <td className="num">S/ {Number(prod.precio).toFixed(2)}</td>
+                  <td>
+                    <MedidorStock
+                      stock={prod.stock}
+                      minimo={prod.stock_minimo}
+                    />
                   </td>
-                  <td className="px-4 py-3">
-                    S/ {Number(prod.precio).toFixed(2)}
-                  </td>
-                  <td className="px-4 py-3">{prod.stock}</td>
-                  <td className="px-4 py-3">{prod.stock_minimo}</td>
-                  <td className="px-4 py-3">
-                    <span
-                      className={`rounded-full px-3 py-1 text-xs font-semibold ${
-                        bajoStock
-                          ? "bg-red-100 text-red-800"
-                          : "bg-green-100 text-green-800"
-                      }`}
-                    >
-                      {bajoStock ? "Stock bajo" : "Stock normal"}
-                    </span>
-                  </td>
-                  <td className="px-4 py-3">
+                  <td className="text-right">
                     <button
                       type="button"
                       onClick={() => abrirEditar(prod)}
                       aria-label={`Editar ${prod.nombre}`}
-                      className="rounded-lg border border-slate-300 bg-white px-3 py-1 text-xs font-semibold text-slate-800 hover:bg-slate-100"
+                      className="btn btn-chico btn-secundario"
                     >
                       Editar
                     </button>
