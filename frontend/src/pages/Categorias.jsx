@@ -77,24 +77,22 @@ const Categorias = () => {
   };
 
   if (loading)
-    return <p className="p-6 text-slate-600">Cargando categorías...</p>;
+    return <p className="pagina text-tinta-suave">Cargando categorías...</p>;
   if (errorCarga)
     return (
-      <p role="alert" className="p-6 text-red-700">
-        Error: {errorCarga}
-      </p>
+      <main className="pagina">
+        <p role="alert" className="mensaje-error">
+          Error: {errorCarga}
+        </p>
+      </main>
     );
 
   return (
-    <main className="min-h-screen bg-slate-50 p-4 font-sans text-slate-900 sm:p-8">
-      <h1 className="mb-5 text-2xl font-bold sm:text-3xl">Categorías</h1>
+    <main className="pagina">
+      <h1 className="titulo-pagina">Categorías</h1>
 
-      <form
-        onSubmit={guardar}
-        noValidate
-        className="mb-5 rounded-xl border border-slate-200 bg-white p-4"
-      >
-        <label htmlFor="nombre-categoria" className="text-sm font-semibold">
+      <form onSubmit={guardar} noValidate className="panel mb-5 p-4">
+        <label htmlFor="nombre-categoria" className="etiqueta">
           {editando ? "Editar categoría" : "Nueva categoría"}
         </label>
         <div className="mt-1 flex flex-wrap gap-3">
@@ -109,14 +107,12 @@ const Categorias = () => {
             }}
             aria-invalid={Boolean(errorForm)}
             aria-describedby={errorForm ? "error-categoria" : undefined}
-            className={`min-h-11 min-w-60 flex-1 rounded-lg border px-3 text-sm ${
-              errorForm ? "border-red-700" : "border-slate-300"
-            }`}
+            className={`campo min-w-60 flex-1 ${errorForm ? "campo-error" : ""}`}
           />
           <button
             type="submit"
             disabled={enviando}
-            className="min-h-11 rounded-lg bg-teal-700 px-4 text-sm font-semibold text-white hover:bg-teal-800 disabled:opacity-60"
+            className="btn btn-primario"
           >
             {enviando
               ? "Guardando..."
@@ -128,45 +124,44 @@ const Categorias = () => {
             <button
               type="button"
               onClick={cancelar}
-              className="min-h-11 rounded-lg border border-slate-300 bg-white px-4 text-sm font-semibold text-slate-800 hover:bg-slate-100"
+              className="btn btn-secundario"
             >
               Cancelar
             </button>
           )}
         </div>
         {errorForm && (
-          <p id="error-categoria" role="alert" className="mt-2 text-sm text-red-700">
+          <p id="error-categoria" role="alert" className="texto-error mt-2">
             {errorForm}
           </p>
         )}
       </form>
 
-      <div className="overflow-x-auto rounded-xl border border-slate-200 bg-white">
-        <table className="w-full min-w-[420px] text-left text-sm">
-          <thead className="bg-slate-100 text-slate-600">
+      <div className="tabla-contenedor">
+        <table className="tabla min-w-[420px]">
+          <thead>
             <tr>
-              <th scope="col" className="px-4 py-3 font-semibold">
-                ID
-              </th>
-              <th scope="col" className="px-4 py-3 font-semibold">
-                Nombre
-              </th>
-              <th scope="col" className="px-4 py-3 font-semibold">
-                Acciones
+              <th scope="col">ID</th>
+              <th scope="col">Nombre</th>
+              <th scope="col">
+                <span className="sr-only">Acciones</span>
               </th>
             </tr>
           </thead>
           <tbody>
             {categorias.map((cat) => (
-              <tr key={cat.id} className="border-t border-slate-200">
-                <td className="px-4 py-3">{cat.id}</td>
-                <td className="px-4 py-3">{cat.nombre}</td>
-                <td className="px-4 py-3">
+              <tr
+                key={cat.id}
+                className={editando?.id === cat.id ? "bg-botica-suave" : ""}
+              >
+                <td className="text-tinta-suave">{cat.id}</td>
+                <td className="font-semibold">{cat.nombre}</td>
+                <td className="text-right">
                   <button
                     type="button"
                     onClick={() => iniciarEdicion(cat)}
                     aria-label={`Editar ${cat.nombre}`}
-                    className="rounded-lg border border-slate-300 bg-white px-3 py-1 text-xs font-semibold text-slate-800 hover:bg-slate-100"
+                    className="btn btn-chico btn-secundario"
                   >
                     Editar
                   </button>
@@ -175,7 +170,7 @@ const Categorias = () => {
             ))}
             {categorias.length === 0 && (
               <tr>
-                <td colSpan="3" className="px-4 py-6 text-center text-slate-500">
+                <td colSpan="3" className="py-6 text-center text-tinta-suave">
                   No hay categorías registradas.
                 </td>
               </tr>

@@ -1,12 +1,14 @@
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
+import GraficoVentas from "../components/GraficoVentas";
 
 const TARJETAS = [
-  { clave: "ventas_hoy", titulo: "Ventas de hoy", estilo: "text-teal-700" },
-  { clave: "total_productos", titulo: "Total de productos", estilo: "text-slate-900" },
+  { clave: "ventas_hoy", titulo: "Ventas de hoy" },
+  { clave: "total_productos", titulo: "Productos registrados" },
   {
     clave: "productos_bajo_stock",
-    titulo: "Productos en alerta",
-    estilo: "text-red-700",
+    titulo: "Productos con stock bajo",
+    alerta: true,
   },
 ];
 
@@ -28,30 +30,61 @@ const Dashboard = () => {
       .finally(() => setLoading(false));
   }, []);
 
-  if (loading) return <p className="p-6 text-slate-600">Cargando dashboard...</p>;
+  if (loading) return <p className="pagina text-tinta-suave">Cargando dashboard...</p>;
   if (error)
     return (
-      <p role="alert" className="p-6 text-red-700">
-        Error: {error}
-      </p>
+      <main className="pagina">
+        <p role="alert" className="mensaje-error">
+          Error: {error}
+        </p>
+      </main>
     );
 
   return (
-    <main className="min-h-screen bg-slate-50 p-4 font-sans text-slate-900 sm:p-8">
-      <h1 className="mb-5 text-2xl font-bold sm:text-3xl">Dashboard</h1>
+    <main className="pagina">
+      <h1 className="titulo-pagina">Dashboard</h1>
 
       <div className="grid gap-4 sm:grid-cols-3">
-        {TARJETAS.map((t) => (
-          <section
-            key={t.clave}
-            className="rounded-xl border border-slate-200 bg-white p-5"
-          >
-            <h2 className="text-sm font-semibold text-slate-600">{t.titulo}</h2>
-            <p className={`mt-2 text-4xl font-bold ${t.estilo}`}>
-              {metricas?.[t.clave] ?? "-"}
-            </p>
-          </section>
-        ))}
+        {TARJETAS.map((t) => {
+          const valor = metricas?.[t.clave];
+          const enAlerta = t.alerta && valor > 0;
+          const clase = `panel p-5 ${
+            enAlerta ? "border-alerta/40 bg-alerta-suave" : ""
+          }`;
+          const interior = (
+            <>
+              <h2 className="text-sm font-semibold text-tinta-suave">{t.titulo}</h2>
+              <p
+                className={`mt-2 text-4xl font-bold tabular-nums ${
+                  enAlerta ? "text-alerta" : "text-tinta"
+                }`}
+              >
+                {valor ?? "-"}
+              </p>
+              {enAlerta && (
+                <p className="mt-1 text-sm font-semibold text-alerta">Ver cuáles</p>
+              )}
+            </>
+          );
+
+          return enAlerta ? (
+            <Link
+              key={t.clave}
+              to="/alertas"
+              className={`${clase} block hover:border-alerta`}
+            >
+              {interior}
+            </Link>
+          ) : (
+            <section key={t.clave} className={clase}>
+              {interior}
+            </section>
+          );
+        })}
+      </div>
+
+      <div className="mt-4">
+        <GraficoVentas />
       </div>
     </main>
   );

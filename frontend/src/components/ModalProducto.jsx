@@ -28,10 +28,7 @@ const formDesdeProducto = (p) =>
       }
     : FORMULARIO_VACIO;
 
-const claseCampo = (hayError) =>
-  `w-full min-h-11 rounded-lg border px-3 text-sm ${
-    hayError ? "border-red-700" : "border-slate-300"
-  }`;
+const claseCampo = (hayError) => `campo ${hayError ? "campo-error" : ""}`;
 
 const esEnteroValido = (valor) =>
   valor !== "" && Number.isInteger(Number(valor)) && Number(valor) >= 0;

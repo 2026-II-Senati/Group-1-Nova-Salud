@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 const API = "http://localhost:3000/api/productos";
 
@@ -18,8 +18,8 @@ const obtenerUsuarioId = () => {
 
 const Pos = () => {
   const [busqueda, setBusqueda] = useState("");
-  const [resultados, setResultados] = useState(null);
-  const [buscando, setBuscando] = useState(false);
+  const [resultados, setResultados] = useState([]);
+  const [buscando, setBuscando] = useState(true);
   const [errorBusqueda, setErrorBusqueda] = useState("");
   const [carrito, setCarrito] = useState([]);
   const [cobrando, setCobrando] = useState(false);
@@ -27,34 +27,48 @@ const Pos = () => {
   const [ventaRegistrada, setVentaRegistrada] = useState(null);
   const [ultimaBusqueda, setUltimaBusqueda] = useState("");
 
-  const buscar = async (e) => {
+  const cargar = (q) => {
+    const url = q ? `${API}/buscar?q=${encodeURIComponent(q)}` : API;
+    return fetch(url)
+      .then(async (res) => {
+        const data = await res.json().catch(() => null);
+        if (!res.ok) {
+          throw new Error(data?.message || "No se pudo buscar el producto.");
+        }
+        setResultados(Array.isArray(data) ? data : []);
+        setUltimaBusqueda(q);
+      })
+      .catch((err) => {
+        setErrorBusqueda(
+          err instanceof TypeError
+            ? "No se pudo conectar con el servidor."
+            : err.message,
+        );
+      })
+      .finally(() => setBuscando(false));
+  };
+
+  useEffect(() => {
+    cargar("");
+  }, []);
+
+  const buscar = (e) => {
     e.preventDefault();
     const q = busqueda.trim();
     if (!q) {
       setErrorBusqueda("Escribe el nombre de un producto para buscar.");
       return;
     }
-
     setBuscando(true);
     setErrorBusqueda("");
-    try {
-      const res = await fetch(`${API}/buscar?q=${encodeURIComponent(q)}`);
-      const data = await res.json().catch(() => null);
-      if (!res.ok) {
-        throw new Error(data?.message || "No se pudo buscar el producto.");
-      }
-      setResultados(Array.isArray(data) ? data : []);
-      setUltimaBusqueda(q);
-    } catch (err) {
-      setResultados(null);
-      setErrorBusqueda(
-        err instanceof TypeError
-          ? "No se pudo conectar con el servidor."
-          : err.message,
-      );
-    } finally {
-      setBuscando(false);
-    }
+    cargar(q);
+  };
+
+  const verTodos = () => {
+    setBusqueda("");
+    setBuscando(true);
+    setErrorBusqueda("");
+    cargar("");
   };
 
   const agregar = (prod) => {
@@ -85,11 +99,11 @@ const Pos = () => {
   };
 
   const refrescarResultados = async () => {
-    if (!ultimaBusqueda) return;
     try {
-      const res = await fetch(
-        `${API}/buscar?q=${encodeURIComponent(ultimaBusqueda)}`,
-      );
+      const url = ultimaBusqueda
+        ? `${API}/buscar?q=${encodeURIComponent(ultimaBusqueda)}`
+        : API;
+      const res = await fetch(url);
       if (res.ok) setResultados(await res.json());
     } catch {
       // si falla, se mantiene la lista anterior
@@ -142,12 +156,12 @@ const Pos = () => {
   );
 
   return (
-    <main className="min-h-screen bg-slate-50 p-4 font-sans text-slate-900 sm:p-8">
-      <h1 className="mb-5 text-2xl font-bold sm:text-3xl">Punto de venta</h1>
+    <main className="pagina">
+      <h1 className="titulo-pagina">Punto de venta</h1>
 
-      <div className="grid gap-6 lg:grid-cols-2">
+      <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_24rem] lg:items-start">
         <section aria-labelledby="titulo-busqueda">
-          <h2 id="titulo-busqueda" className="mb-3 text-lg font-semibold">
+          <h2 id="titulo-busqueda" className="mb-3 text-lg font-bold">
             Buscar productos
           </h2>
 
@@ -170,190 +184,208 @@ const Pos = () => {
               placeholder="Ej: paracetamol"
               aria-invalid={Boolean(errorBusqueda)}
               aria-describedby={errorBusqueda ? "error-busqueda" : undefined}
-              className={`min-h-11 min-w-48 flex-1 rounded-lg border bg-white px-3 text-sm ${
-                errorBusqueda ? "border-red-700" : "border-slate-300"
+              className={`campo min-w-48 flex-1 ${
+                errorBusqueda ? "campo-error" : ""
               }`}
             />
             <button
               type="submit"
               disabled={buscando}
-              className="min-h-11 rounded-lg bg-teal-700 px-4 text-sm font-semibold text-white hover:bg-teal-800 disabled:opacity-60"
+              className="btn btn-primario"
             >
               {buscando ? "Buscando..." : "Buscar"}
             </button>
           </form>
 
           {errorBusqueda && (
-            <p
-              id="error-busqueda"
-              role="alert"
-              className="mb-3 text-sm text-red-700"
-            >
+            <p id="error-busqueda" role="alert" className="texto-error mb-3">
               {errorBusqueda}
             </p>
           )}
 
-          {resultados !== null && resultados.length === 0 && (
-            <p className="rounded-xl border border-slate-200 bg-white px-4 py-6 text-center text-slate-500">
+          {(resultados.length > 0 || ultimaBusqueda) && (
+            <p
+              aria-live="polite"
+              className="mb-3 flex flex-wrap items-center gap-3 text-sm text-tinta-suave"
+            >
+              <span>
+                {ultimaBusqueda
+                  ? `${resultados.length} ${
+                      resultados.length === 1 ? "resultado" : "resultados"
+                    } para “${ultimaBusqueda}”`
+                  : `${resultados.length} ${
+                      resultados.length === 1 ? "producto" : "productos"
+                    }`}
+              </span>
+              {ultimaBusqueda && (
+                <button
+                  type="button"
+                  onClick={verTodos}
+                  className="btn btn-chico btn-secundario"
+                >
+                  Ver todos
+                </button>
+              )}
+            </p>
+          )}
+
+          {buscando && resultados.length === 0 && (
+            <p className="text-tinta-suave">Cargando productos...</p>
+          )}
+
+          {!buscando && resultados.length === 0 && !errorBusqueda && (
+            <p className="panel px-4 py-6 text-center text-tinta-suave">
               No se encontraron productos.
             </p>
           )}
 
-          {resultados !== null && resultados.length > 0 && (
-            <div className="overflow-x-auto rounded-xl border border-slate-200 bg-white">
-              <table className="w-full min-w-[420px] text-left text-sm">
-                <thead className="bg-slate-100 text-slate-600">
-                  <tr>
-                    <th scope="col" className="px-4 py-3 font-semibold">
-                      Producto
-                    </th>
-                    <th scope="col" className="px-4 py-3 font-semibold">
-                      Precio
-                    </th>
-                    <th scope="col" className="px-4 py-3 font-semibold">
-                      Stock
-                    </th>
-                    <th scope="col" className="px-4 py-3 font-semibold">
-                      Acciones
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {resultados.map((prod) => (
-                    <tr key={prod.id} className="border-t border-slate-200">
-                      <td className="px-4 py-3">{prod.nombre}</td>
-                      <td className="px-4 py-3">
+          {resultados.length > 0 && (
+            <ul className="grid grid-cols-[repeat(auto-fill,minmax(13rem,1fr))] gap-3">
+              {resultados.map((prod) => {
+                const bajo = Number(prod.stock) < Number(prod.stock_minimo);
+                const enCarrito = carrito.find(
+                  (i) => i.id === prod.id,
+                )?.cantidad;
+                return (
+                  <li
+                    key={prod.id}
+                    className="panel flex flex-col justify-between gap-4 p-4"
+                  >
+                    <div>
+                      <h3 className="font-semibold leading-snug">
+                        {prod.nombre}
+                      </h3>
+                      <p
+                        className={`mt-1 text-sm ${
+                          bajo
+                            ? "font-semibold text-alerta"
+                            : "text-tinta-suave"
+                        }`}
+                      >
+                        {bajo
+                          ? `Quedan ${prod.stock}`
+                          : `${prod.stock} en stock`}
+                      </p>
+                      {enCarrito && (
+                        <p className="mt-1 text-sm font-semibold text-botica-oscuro">
+                          En el carrito: {enCarrito}
+                        </p>
+                      )}
+                    </div>
+
+                    <div className="flex items-center justify-between gap-3">
+                      <p className="text-xl font-bold tabular-nums">
                         S/ {aSoles(centimos(prod.precio))}
-                      </td>
-                      <td className="px-4 py-3">{prod.stock}</td>
-                      <td className="px-4 py-3">
-                        <button
-                          type="button"
-                          onClick={() => agregar(prod)}
-                          aria-label={`Agregar ${prod.nombre}`}
-                          className="rounded-lg border border-slate-300 bg-white px-3 py-1 text-xs font-semibold text-slate-800 hover:bg-slate-100"
-                        >
-                          Agregar
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                      </p>
+                      <button
+                        type="button"
+                        onClick={() => agregar(prod)}
+                        aria-label={`Agregar ${prod.nombre}`}
+                        className="btn btn-chico btn-secundario"
+                      >
+                        Agregar
+                      </button>
+                    </div>
+                  </li>
+                );
+              })}
+            </ul>
           )}
         </section>
 
-        <section aria-labelledby="titulo-carrito">
-          <h2 id="titulo-carrito" className="mb-3 text-lg font-semibold">
+        <section
+          aria-labelledby="titulo-carrito"
+          className="panel p-5 lg:sticky lg:top-8"
+        >
+          <h2 id="titulo-carrito" className="mb-2 text-lg font-bold">
             Carrito
           </h2>
 
           {carrito.length === 0 ? (
-            <p className="rounded-xl border border-slate-200 bg-white px-4 py-6 text-center text-slate-500">
+            <p className="py-6 text-center text-tinta-suave">
               El carrito está vacío.
             </p>
           ) : (
-            <div className="overflow-x-auto rounded-xl border border-slate-200 bg-white">
-              <table className="w-full min-w-[420px] text-left text-sm">
-                <thead className="bg-slate-100 text-slate-600">
-                  <tr>
-                    <th scope="col" className="px-4 py-3 font-semibold">
-                      Producto
-                    </th>
-                    <th scope="col" className="px-4 py-3 font-semibold">
-                      Cantidad
-                    </th>
-                    <th scope="col" className="px-4 py-3 font-semibold">
-                      Subtotal
-                    </th>
-                    <th scope="col" className="px-4 py-3 font-semibold">
-                      Acciones
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {carrito.map((item) => (
-                    <tr key={item.id} className="border-t border-slate-200">
-                      <td className="px-4 py-3">{item.nombre}</td>
-                      <td className="px-4 py-3">
-                        <div className="flex items-center gap-2">
-                          <button
-                            type="button"
-                            onClick={() => cambiarCantidad(item.id, -1)}
-                            disabled={item.cantidad <= 1}
-                            aria-label={`Quitar una unidad de ${item.nombre}`}
-                            className="h-8 w-8 rounded-lg border border-slate-300 bg-white font-semibold hover:bg-slate-100 disabled:opacity-40"
-                          >
-                            -
-                          </button>
-                          <span
-                            aria-label={`Cantidad de ${item.nombre}`}
-                            className="w-6 text-center font-semibold"
-                          >
-                            {item.cantidad}
-                          </span>
-                          <button
-                            type="button"
-                            onClick={() => cambiarCantidad(item.id, 1)}
-                            aria-label={`Agregar una unidad de ${item.nombre}`}
-                            className="h-8 w-8 rounded-lg border border-slate-300 bg-white font-semibold hover:bg-slate-100"
-                          >
-                            +
-                          </button>
-                        </div>
-                      </td>
-                      <td className="px-4 py-3">
-                        S/ {aSoles(centimos(item.precio) * item.cantidad)}
-                      </td>
-                      <td className="px-4 py-3">
-                        <button
-                          type="button"
-                          onClick={() => quitar(item.id)}
-                          aria-label={`Quitar ${item.nombre} del carrito`}
-                          className="rounded-lg border border-red-300 bg-white px-3 py-1 text-xs font-semibold text-red-700 hover:bg-red-50"
-                        >
-                          Quitar
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+            <ul className="divide-y divide-linea">
+              {carrito.map((item) => (
+                <li key={item.id} className="py-3">
+                  <div className="flex items-start justify-between gap-3">
+                    <p className="font-semibold">{item.nombre}</p>
+                    <p className="font-semibold tabular-nums">
+                      S/ {aSoles(centimos(item.precio) * item.cantidad)}
+                    </p>
+                  </div>
+
+                  <div className="mt-2 flex items-center justify-between gap-3">
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => cambiarCantidad(item.id, -1)}
+                        disabled={item.cantidad <= 1}
+                        aria-label={`Quitar una unidad de ${item.nombre}`}
+                        className="btn btn-chico btn-secundario w-9"
+                      >
+                        -
+                      </button>
+                      <span
+                        aria-label={`Cantidad de ${item.nombre}`}
+                        className="w-8 text-center font-semibold tabular-nums"
+                      >
+                        {item.cantidad}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => cambiarCantidad(item.id, 1)}
+                        aria-label={`Agregar una unidad de ${item.nombre}`}
+                        className="btn btn-chico btn-secundario w-9"
+                      >
+                        +
+                      </button>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={() => quitar(item.id)}
+                      aria-label={`Quitar ${item.nombre} del carrito`}
+                      className="btn btn-chico btn-peligro"
+                    >
+                      Quitar
+                    </button>
+                  </div>
+                </li>
+              ))}
+            </ul>
           )}
 
-          <div className="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-slate-200 bg-white p-4">
-            <p className="text-lg font-semibold">
-              Total:{" "}
-              <span data-testid="total-carrito" className="text-teal-700">
+          <div className="mt-4 border-t border-dashed border-borde-campo pt-4">
+            <div className="flex items-baseline justify-between gap-3">
+              <p className="text-lg font-semibold">Total</p>
+              <p
+                data-testid="total-carrito"
+                className="text-3xl font-bold tabular-nums text-botica-oscuro"
+              >
                 S/ {aSoles(totalCentimos)}
-              </span>
-            </p>
+              </p>
+            </div>
+
             <button
               type="button"
               onClick={cobrar}
               disabled={carrito.length === 0 || cobrando}
-              className="min-h-11 rounded-lg bg-teal-700 px-6 text-sm font-semibold text-white hover:bg-teal-800 disabled:opacity-60"
+              className="btn btn-primario mt-4 w-full"
             >
               {cobrando ? "Cobrando..." : "Cobrar"}
             </button>
           </div>
 
           {errorCobro && (
-            <p
-              role="alert"
-              className="mt-3 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm font-semibold text-red-800"
-            >
+            <p role="alert" className="mensaje-error mt-4">
               {errorCobro}
             </p>
           )}
 
           {ventaRegistrada && (
-            <p
-              role="status"
-              className="mt-3 rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-sm font-semibold text-green-800"
-            >
+            <p role="status" className="mensaje-ok mt-4">
               Venta #{ventaRegistrada.venta_id} registrada. Total: S/{" "}
               {Number(ventaRegistrada.total).toFixed(2)}
             </p>
