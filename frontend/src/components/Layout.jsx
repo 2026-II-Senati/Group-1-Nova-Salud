@@ -4,6 +4,7 @@ import MarcaLogo from "./MarcaLogo";
 const ENLACES = [
   { a: "/dashboard", texto: "Dashboard" },
   { a: "/inventario", texto: "Inventario" },
+  { a: "/historial-inventario", texto: "Historial de inventario" },
   { a: "/pos", texto: "Punto de venta" },
   { a: "/categorias", texto: "Categorías" },
   { a: "/proveedores", texto: "Proveedores" },

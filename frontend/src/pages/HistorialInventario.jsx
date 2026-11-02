@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { getMovimientos } from '../services/movimientosService';
 
 export const HistorialInventario = () => {
@@ -7,48 +7,54 @@ export const HistorialInventario = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  const fetchMovimientos = async (fecha = '') => {
-    setLoading(true);
-    setError(null);
-    try {
-      const data = await getMovimientos(fecha);
-      setMovimientos(data);
-    } catch (err) {
-      setError('No se pudo cargar el historial de movimientos.');
-      setMovimientos([]);
-    } finally {
-      setLoading(false);
-    }
-  };
+  const cargar = (fecha) =>
+    getMovimientos(fecha)
+      .then((data) => {
+        setMovimientos(data);
+        setError(null);
+      })
+      .catch(() => {
+        setError('No se pudo cargar el historial de movimientos.');
+        setMovimientos([]);
+      })
+      .finally(() => setLoading(false));
 
   useEffect(() => {
-    fetchMovimientos(fechaFiltro);
+    cargar(fechaFiltro);
   }, [fechaFiltro]);
 
+  const cambiarFecha = (valor) => {
+    setLoading(true);
+    setFechaFiltro(valor);
+  };
+
   return (
-    <div className="p-6">
-      <div className="flex justify-between items-center mb-6">
+    <main className="pagina">
+      <div className="mb-5 flex flex-wrap items-end justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-800">Historial de Inventario</h1>
-          <p className="text-gray-600">Registro de movimientos de entrada y salida</p>
+          <h1 className="text-2xl font-bold sm:text-3xl">Historial de inventario</h1>
+          <p className="mt-1 text-tinta-suave">
+            Registro de movimientos de entrada y salida
+          </p>
         </div>
 
         {/* Filtro por fecha */}
-        <div className="flex items-center gap-2">
-          <label htmlFor="fecha" className="text-sm font-medium text-gray-700">
-            Filtrar por fecha:
+        <div className="flex flex-wrap items-center gap-3">
+          <label htmlFor="fecha" className="etiqueta">
+            Filtrar por fecha
           </label>
           <input
             type="date"
             id="fecha"
             value={fechaFiltro}
-            onChange={(e) => setFechaFiltro(e.target.value)}
-            className="border rounded-md px-3 py-1.5 text-sm outline-none focus:ring-2 focus:ring-emerald-500"
+            onChange={(e) => cambiarFecha(e.target.value)}
+            className="campo w-auto"
           />
           {fechaFiltro && (
             <button
-              onClick={() => setFechaFiltro('')}
-              className="text-sm text-gray-500 hover:text-gray-700 underline"
+              type="button"
+              onClick={() => cambiarFecha('')}
+              className="btn btn-secundario"
             >
               Limpiar
             </button>
@@ -56,50 +62,57 @@ export const HistorialInventario = () => {
         </div>
       </div>
 
-      {/* Tabla de Movimientos (Reutilizando diseño estandarizado) */}
-      <div className="bg-white rounded-lg shadow overflow-hidden">
-        <table className="w-full text-left border-collapse">
+      {error && (
+        <p role="alert" className="mensaje-error mb-5">
+          {error}
+        </p>
+      )}
+
+      <div className="tabla-contenedor">
+        <table className="tabla min-w-[420px]">
           <thead>
-            <tr className="bg-gray-50 border-b text-xs font-semibold text-gray-600 uppercase">
-              <th className="p-4">Producto</th>
-              <th className="p-4">Tipo</th>
-              <th className="p-4">Cantidad</th>
-              <th className="p-4">Fecha</th>
+            <tr>
+              <th scope="col">Producto</th>
+              <th scope="col">Tipo</th>
+              <th scope="col" className="num">
+                Cantidad
+              </th>
+              <th scope="col">Fecha</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-gray-100 text-sm">
+          <tbody>
             {loading ? (
               <tr>
-                <td colSpan="4" className="p-6 text-center text-gray-500">
+                <td colSpan="4" className="py-6 text-center text-tinta-suave">
                   Cargando movimientos...
                 </td>
               </tr>
-            ) : error || movimientos.length === 0 ? (
+            ) : movimientos.length === 0 ? (
               <tr>
-                <td colSpan="4" className="p-6 text-center text-gray-500">
+                <td colSpan="4" className="py-6 text-center text-tinta-suave">
                   No hay movimientos registrados
                 </td>
               </tr>
             ) : (
               movimientos.map((mov) => (
-                <tr key={mov.id || mov.movimiento_id} className="hover:bg-gray-50">
-                  <td className="p-4 font-medium text-gray-800">
+                <tr key={mov.id || mov.movimiento_id}>
+                  <td className="font-semibold">
                     {mov.producto_nombre || mov.producto}
                   </td>
-                  <td className="p-4">
+                  <td>
                     <span
-                      className={`px-2.5 py-1 rounded-full text-xs font-semibold ${
+                      className={`rounded-full px-3 py-1 text-xs font-semibold ${
                         mov.tipo?.toLowerCase() === 'entrada'
-                          ? 'bg-green-100 text-green-800'
-                          : 'bg-red-100 text-red-800'
+                          ? 'bg-botica-suave text-botica-oscuro'
+                          : 'bg-alerta-suave text-alerta'
                       }`}
                     >
                       {mov.tipo}
                     </span>
                   </td>
-                  <td className="p-4 text-gray-700">{mov.cantidad}</td>
-                  <td className="p-4 text-gray-500">
-                    {new Date(mov.fecha).toLocaleDateString()}
+                  <td className="num">{mov.cantidad}</td>
+                  <td className="text-tinta-suave">
+                    {new Date(mov.fecha).toLocaleDateString('es-PE')}
                   </td>
                 </tr>
               ))
@@ -107,6 +120,6 @@ export const HistorialInventario = () => {
           </tbody>
         </table>
       </div>
-    </div>
+    </main>
   );
 };
