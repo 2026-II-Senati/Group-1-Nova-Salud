@@ -2,7 +2,7 @@
 
 **Proyecto:** Nova Salud  
 **Fecha:** 2026-11-02  
-**Responsable:** Cesar Roendo Loayza Manchego
+**Responsable:** Cesar Rosendo Loayza Manchego
 
 ### Objetivo
 Verificar la resiliencia de la aplicación ante entradas inválidas, límites de datos y navegación no autorizada, garantizando que nunca colapse ni exponga datos internos.
