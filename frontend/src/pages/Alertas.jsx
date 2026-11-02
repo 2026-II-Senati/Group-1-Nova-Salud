@@ -20,50 +20,45 @@ const Alertas = () => {
       .finally(() => setLoading(false));
   }, []);
 
-  if (loading) return <p className="p-6 text-slate-600">Cargando alertas...</p>;
+  if (loading)
+    return <p className="pagina text-tinta-suave">Cargando alertas...</p>;
   if (error)
     return (
-      <p role="alert" className="p-6 text-red-700">
-        Error: {error}
-      </p>
+      <main className="pagina">
+        <p role="alert" className="mensaje-error">
+          Error: {error}
+        </p>
+      </main>
     );
 
   return (
-    <main className="min-h-screen bg-slate-50 p-4 font-sans text-slate-900 sm:p-8">
-      <h1 className="mb-5 text-2xl font-bold sm:text-3xl">Alertas de stock</h1>
+    <main className="pagina">
+      <h1 className="titulo-pagina">Alertas de stock</h1>
 
       {alertas.length === 0 ? (
-        <p
-          role="status"
-          className="rounded-xl border border-green-200 bg-green-50 px-4 py-6 text-center text-lg font-semibold text-green-800"
-        >
+        <p role="status" className="mensaje-ok py-6 text-center text-lg">
           Todo en orden
         </p>
       ) : (
-        <div className="overflow-x-auto rounded-xl border border-slate-200 bg-white">
-          <table className="w-full min-w-[420px] text-left text-sm">
-            <thead className="bg-slate-100 text-slate-600">
+        <div className="tabla-contenedor">
+          <table className="tabla min-w-[420px]">
+            <thead>
               <tr>
-                <th scope="col" className="px-4 py-3 font-semibold">
-                  Producto
-                </th>
-                <th scope="col" className="px-4 py-3 font-semibold">
+                <th scope="col">Producto</th>
+                <th scope="col" className="num">
                   Stock actual
                 </th>
-                <th scope="col" className="px-4 py-3 font-semibold">
+                <th scope="col" className="num">
                   Stock mínimo
                 </th>
               </tr>
             </thead>
             <tbody>
               {alertas.map((a) => (
-                <tr
-                  key={a.id}
-                  className="border-t border-slate-200 bg-red-50 font-semibold text-red-800"
-                >
-                  <td className="px-4 py-3">{a.nombre}</td>
-                  <td className="px-4 py-3">{a.stock}</td>
-                  <td className="px-4 py-3">{a.stock_minimo}</td>
+                <tr key={a.id} className="fila-alerta">
+                  <td>{a.nombre}</td>
+                  <td className="num">{a.stock}</td>
+                  <td className="num">{a.stock_minimo}</td>
                 </tr>
               ))}
             </tbody>
