@@ -27,6 +27,11 @@ body {
     font-family: var(--font-sans);
 }
 
+:focus-visible {
+    outline: 2px solid var(--color-botica);
+    outline-offset: 2px;
+}
+
 @keyframes ecg-draw {
     from {
         stroke-dashoffset: 100;

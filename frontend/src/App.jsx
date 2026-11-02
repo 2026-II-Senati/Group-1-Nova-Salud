@@ -1,12 +1,13 @@
-import { Routes, Route, Navigate } from 'react-router-dom';
-import ProtectedRoute from './components/ProtectedRoute';
-import Login from './pages/Login';
-import Dashboard from './pages/Dashboard';
-import Inventario from './pages/Inventario';
-import Categorias from './pages/Categorias';
-import Proveedores from './pages/Proveedores';
-import Alertas from './pages/Alertas';
-import Pos from './pages/Pos';
+import { Routes, Route, Navigate } from "react-router-dom";
+import ProtectedRoute from "./components/ProtectedRoute";
+import Login from "./pages/Login";
+import Dashboard from "./pages/Dashboard";
+import Inventario from "./pages/Inventario";
+import Categorias from "./pages/Categorias";
+import Proveedores from "./pages/Proveedores";
+import Alertas from "./pages/Alertas";
+import Pos from "./pages/Pos";
+import Layout from "./components/Layout";
 
 function App() {
   return (
@@ -14,24 +15,18 @@ function App() {
       {/* Ruta pública de login */}
       <Route path="/login" element={<Login />} />
 
-      {/* Vista de inventario (T25) */}
-      <Route path="/inventario" element={<Inventario />} />
+      {/* Pantallas con barra lateral */}
+      <Route element={<Layout />}>
+        <Route path="/inventario" element={<Inventario />} />
+        <Route path="/categorias" element={<Categorias />} />
+        <Route path="/proveedores" element={<Proveedores />} />
+        <Route path="/alertas" element={<Alertas />} />
+        <Route path="/pos" element={<Pos />} />
 
-      {/* Vista de categorías (T35) */}
-      <Route path="/categorias" element={<Categorias />} />
-
-      {/* Vista de proveedores (T35) */}
-      <Route path="/proveedores" element={<Proveedores />} />
-
-      {/* Vista de alertas de stock (T52) */}
-      <Route path="/alertas" element={<Alertas />} />
-
-      {/* Vista del punto de venta (T41) */}
-      <Route path="/pos" element={<Pos />} />
-
-      {/* Rutas privadas envueltas con ProtectedRoute */}
-      <Route element={<ProtectedRoute />}>
-        <Route path="/dashboard" element={<Dashboard />} />
+        {/* Rutas privadas envueltas con ProtectedRoute */}
+        <Route element={<ProtectedRoute />}>
+          <Route path="/dashboard" element={<Dashboard />} />
+        </Route>
       </Route>
 
       {/* Cualquier otra ruta redirige a dashboard */}
