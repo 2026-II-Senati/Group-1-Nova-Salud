@@ -7,6 +7,7 @@ import Categorias from "./pages/Categorias";
 import Proveedores from "./pages/Proveedores";
 import Alertas from "./pages/Alertas";
 import Pos from "./pages/Pos";
+import { HistorialInventario } from "./pages/HistorialInventario";
 import Layout from "./components/Layout";
 
 function App() {
@@ -18,6 +19,7 @@ function App() {
       {/* Pantallas con barra lateral */}
       <Route element={<Layout />}>
         <Route path="/inventario" element={<Inventario />} />
+        <Route path="/historial-inventario" element={<HistorialInventario />} />
         <Route path="/categorias" element={<Categorias />} />
         <Route path="/proveedores" element={<Proveedores />} />
         <Route path="/alertas" element={<Alertas />} />
