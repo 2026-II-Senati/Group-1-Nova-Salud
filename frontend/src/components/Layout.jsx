@@ -1,4 +1,5 @@
 import { NavLink, Outlet, useNavigate } from "react-router-dom";
+import MarcaLogo from "./MarcaLogo";
 
 const ENLACES = [
   { a: "/dashboard", texto: "Dashboard" },
@@ -28,8 +29,8 @@ const Layout = () => {
   return (
     <div className="min-h-screen lg:flex">
       <aside className="border-b border-linea bg-white lg:sticky lg:top-0 lg:flex lg:h-screen lg:w-60 lg:shrink-0 lg:flex-col lg:border-b-0 lg:border-r">
-        <div className="px-4 py-4 lg:px-5 lg:py-6">
-          {/* Aquí irá el logo cuando el equipo lo defina */}
+        <div className="flex items-center gap-3 px-4 py-4 lg:px-5 lg:py-6">
+          <MarcaLogo sobre="blanco" className="h-9 w-9" />
           <span className="text-xl font-bold text-botica-oscuro">Nova Salud</span>
         </div>
 
