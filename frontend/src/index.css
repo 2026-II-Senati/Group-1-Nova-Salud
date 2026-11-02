@@ -1,4 +1,31 @@
 @import "tailwindcss";
+@import "@fontsource/atkinson-hyperlegible-next/400.css";
+@import "@fontsource/atkinson-hyperlegible-next/600.css";
+@import "@fontsource/atkinson-hyperlegible-next/700.css";
+
+@theme {
+    --font-sans: "Atkinson Hyperlegible Next", system-ui, sans-serif;
+
+    --color-botica: #0f766e;
+    --color-botica-oscuro: #0b5f59;
+    --color-botica-suave: #e2f1ee;
+    --color-tinta: #1e2a2b;
+    --color-tinta-suave: #5b6b6c;
+    --color-papel: #f2f6f5;
+    --color-linea: #d3dedb;
+    --color-borde-campo: #7e908d;
+    --color-alerta: #b42318;
+    --color-alerta-suave: #fdedeb;
+    --color-aviso: #b7791f;
+    --color-aviso-texto: #8a5a0b;
+    --color-aviso-suave: #fbf1dc;
+}
+
+body {
+    background-color: var(--color-papel);
+    color: var(--color-tinta);
+    font-family: var(--font-sans);
+}
 
 @keyframes ecg-draw {
     from {
