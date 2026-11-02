@@ -4,52 +4,147 @@
 @import "@fontsource/atkinson-hyperlegible-next/700.css";
 
 @theme {
-    --font-sans: "Atkinson Hyperlegible Next", system-ui, sans-serif;
+  --font-sans: "Atkinson Hyperlegible Next", system-ui, sans-serif;
 
-    --color-botica: #0f766e;
-    --color-botica-oscuro: #0b5f59;
-    --color-botica-suave: #e2f1ee;
-    --color-tinta: #1e2a2b;
-    --color-tinta-suave: #5b6b6c;
-    --color-papel: #f2f6f5;
-    --color-linea: #d3dedb;
-    --color-borde-campo: #7e908d;
-    --color-alerta: #b42318;
-    --color-alerta-suave: #fdedeb;
-    --color-aviso: #b7791f;
-    --color-aviso-texto: #8a5a0b;
-    --color-aviso-suave: #fbf1dc;
+  --color-botica: #0f766e;
+  --color-botica-oscuro: #0b5f59;
+  --color-botica-suave: #e2f1ee;
+  --color-tinta: #1e2a2b;
+  --color-tinta-suave: #5b6b6c;
+  --color-papel: #f2f6f5;
+  --color-linea: #d3dedb;
+  --color-borde-campo: #7e908d;
+  --color-alerta: #b42318;
+  --color-alerta-suave: #fdedeb;
+  --color-aviso: #b7791f;
+  --color-aviso-texto: #8a5a0b;
+  --color-aviso-suave: #fbf1dc;
 }
 
 body {
-    background-color: var(--color-papel);
-    color: var(--color-tinta);
-    font-family: var(--font-sans);
+  background-color: var(--color-papel);
+  color: var(--color-tinta);
+  font-family: var(--font-sans);
 }
 
 :focus-visible {
-    outline: 2px solid var(--color-botica);
-    outline-offset: 2px;
+  outline: 2px solid var(--color-botica);
+  outline-offset: 2px;
 }
 
 @keyframes ecg-draw {
-    from {
-        stroke-dashoffset: 100;
-    }
+  from {
+    stroke-dashoffset: 100;
+  }
 
-    to {
-        stroke-dashoffset: 0;
-    }
+  to {
+    stroke-dashoffset: 0;
+  }
 }
 
 .ecg-line {
-    stroke-dasharray: 100;
-    animation: ecg-draw 1.2s linear infinite;
+  stroke-dasharray: 100;
+  animation: ecg-draw 1.2s linear infinite;
 }
 
 @media (prefers-reduced-motion: reduce) {
-    .ecg-line {
-        animation: none;
-        stroke-dasharray: none;
-    }
+  .ecg-line {
+    animation: none;
+    stroke-dasharray: none;
+  }
+}
+
+@layer components {
+  /* Botones */
+  .btn {
+    @apply inline-flex min-h-11 items-center justify-center rounded-lg px-4 text-sm font-semibold disabled:cursor-not-allowed disabled:opacity-60;
+  }
+
+  .btn-chico {
+    @apply min-h-9 px-3;
+  }
+
+  .btn-primario {
+    @apply bg-botica text-white enabled:hover:bg-botica-oscuro;
+  }
+
+  .btn-secundario {
+    @apply border border-borde-campo bg-white text-tinta enabled:hover:bg-papel;
+  }
+
+  .btn-peligro {
+    @apply border border-alerta bg-white text-alerta enabled:hover:bg-alerta-suave;
+  }
+
+  /* Formularios */
+  .etiqueta {
+    @apply text-sm font-semibold text-tinta;
+  }
+
+  .campo {
+    @apply min-h-11 w-full rounded-lg border border-borde-campo bg-white px-3 text-sm text-tinta placeholder:text-tinta-suave;
+  }
+
+  .campo-error {
+    @apply border-alerta;
+  }
+
+  .texto-error {
+    @apply text-sm text-alerta;
+  }
+
+  /* Contenedores y títulos */
+  .pagina {
+    @apply p-4 sm:p-8;
+  }
+
+  .titulo-pagina {
+    @apply mb-5 text-2xl font-bold sm:text-3xl;
+  }
+
+  .panel {
+    @apply rounded-xl border border-linea bg-white;
+  }
+
+  /* Mensajes */
+  .mensaje-error {
+    @apply rounded-lg border border-alerta/30 bg-alerta-suave px-4 py-3 text-sm font-semibold text-alerta;
+  }
+
+  .mensaje-ok {
+    @apply rounded-lg border border-botica/30 bg-botica-suave px-4 py-3 text-sm font-semibold text-botica-oscuro;
+  }
+
+  /* Tablas */
+  .tabla-contenedor {
+    @apply overflow-x-auto rounded-xl border border-linea bg-white;
+  }
+
+  .tabla {
+    @apply w-full text-left text-sm;
+  }
+
+  .tabla thead {
+    @apply bg-papel text-tinta-suave;
+  }
+
+  .tabla th {
+    @apply px-4 py-3 font-semibold;
+  }
+
+  .tabla td {
+    @apply px-4 py-3;
+  }
+
+  .tabla tbody tr {
+    @apply border-t border-linea;
+  }
+
+  .tabla tbody tr.fila-alerta {
+    @apply bg-alerta-suave font-semibold text-alerta;
+  }
+
+  .num {
+    @apply text-right tabular-nums;
+  }
 }
