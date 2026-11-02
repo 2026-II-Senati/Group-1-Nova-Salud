@@ -148,3 +148,9 @@ body {
     @apply text-right tabular-nums;
   }
 }
+
+.tapiz {
+  background-color: #ffffff;
+  background-image: url("/tapiz-salud.svg");
+  background-size: 240px 240px;
+}
