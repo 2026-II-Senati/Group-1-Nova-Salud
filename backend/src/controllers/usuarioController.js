@@ -28,7 +28,12 @@ const cambiarEstado = async (req, res) => {
     res.status(500).json({ message: 'Error interno del servidor' });
   }
 };
+
 const listar = async (req, res) => {
+  if (req.usuario.rol_id !== 1) {
+    return res.status(403).json({ message: 'Solo un administrador puede ver los usuarios' });
+  }
+
   try {
     const [rows] = await db.query(
       'SELECT id, nombre, email, rol_id, activo FROM usuarios ORDER BY id'
