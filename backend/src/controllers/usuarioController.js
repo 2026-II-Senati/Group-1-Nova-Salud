@@ -1,15 +1,25 @@
 const db = require('../db');
+const { responderError, traducirErrorBase, asyncHandler } = require('../utils/errors');
 
-const cambiarEstado = async (req, res) => {
-  const { id } = req.params;
-  const { activo } = req.body;
+const idValido = (valor) => {
+  const n = Number(valor);
+  return Number.isInteger(n) && n > 0 ? n : null;
+};
+
+const cambiarEstado = asyncHandler(async (req, res) => {
+  const id = idValido(req.params.id);
+  const { activo } = req.body || {};
 
   if (req.usuario.rol_id !== 1) {
-    return res.status(403).json({ message: 'Solo un administrador puede cambiar el estado' });
+    return responderError(res, 403, 'Solo un administrador puede cambiar el estado');
+  }
+
+  if (id === null) {
+    return responderError(res, 400, 'El id del usuario no es válido');
   }
 
   if (typeof activo !== 'boolean') {
-    return res.status(400).json({ message: 'activo debe ser true o false' });
+    return responderError(res, 400, 'activo debe ser true o false');
   }
 
   try {
@@ -19,19 +29,23 @@ const cambiarEstado = async (req, res) => {
     );
 
     if (resultado.affectedRows === 0) {
-      return res.status(404).json({ message: 'Usuario no encontrado' });
+      return responderError(res, 404, 'Usuario no encontrado');
     }
 
-    res.json({ id: Number(id), activo });
+    res.json({ id, activo });
   } catch (error) {
+    const traducido = traducirErrorBase(error);
+    if (traducido) {
+      return responderError(res, traducido.status, traducido.message);
+    }
     console.error('Error en PUT /api/usuarios/:id/estado:', error);
-    res.status(500).json({ message: 'Error interno del servidor' });
+    return responderError(res, 500, 'Error interno del servidor');
   }
-};
+});
 
-const listar = async (req, res) => {
+const listar = asyncHandler(async (req, res) => {
   if (req.usuario.rol_id !== 1) {
-    return res.status(403).json({ message: 'Solo un administrador puede ver los usuarios' });
+    return responderError(res, 403, 'Solo un administrador puede ver los usuarios');
   }
 
   try {
@@ -40,9 +54,13 @@ const listar = async (req, res) => {
     );
     res.json(rows);
   } catch (error) {
+    const traducido = traducirErrorBase(error);
+    if (traducido) {
+      return responderError(res, traducido.status, traducido.message);
+    }
     console.error('Error en GET /api/usuarios:', error);
-    res.status(500).json({ message: 'Error interno del servidor' });
+    return responderError(res, 500, 'Error interno del servidor');
   }
-};
+});
 
 module.exports = { cambiarEstado, listar };

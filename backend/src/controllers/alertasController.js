@@ -1,6 +1,9 @@
 const db = require('../db');
+const { responderError, traducirErrorBase, asyncHandler } = require('../utils/errors');
 
-const listar = async (req, res) => {
+const texto = (valor) => (typeof valor === 'string' ? valor.trim() : '');
+
+const listar = asyncHandler(async (req, res) => {
   try {
     const [rows] = await db.query(
       `SELECT id, nombre, stock, stock_minimo
@@ -10,9 +13,13 @@ const listar = async (req, res) => {
     );
     res.json(rows);
   } catch (error) {
+    const traducido = traducirErrorBase(error);
+    if (traducido) {
+      return responderError(res, traducido.status, traducido.message);
+    }
     console.error('Error en GET /api/alertas:', error);
-    res.status(500).json({ message: 'Error interno del servidor' });
+    return responderError(res, 500, 'Error interno del servidor');
   }
-};
+});
 
 module.exports = { listar };

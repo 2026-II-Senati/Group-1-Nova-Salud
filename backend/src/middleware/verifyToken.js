@@ -1,16 +1,17 @@
 const jwt = require('jsonwebtoken');
+const { responderError } = require('../utils/errors');
 
 const verifyToken = (req, res, next) => {
   const header = req.headers.authorization;
 
   if (!header || !header.startsWith('Bearer ')) {
-    return res.status(401).json({ message: 'Token no proporcionado' });
+    return responderError(res, 401, 'Token no proporcionado');
   }
 
   const token = header.slice(7).trim();
 
   if (!token) {
-    return res.status(401).json({ message: 'Token no proporcionado' });
+    return responderError(res, 401, 'Token no proporcionado');
   }
 
   try {
@@ -18,7 +19,7 @@ const verifyToken = (req, res, next) => {
     req.usuario = datos;
     return next();
   } catch (error) {
-    return res.status(401).json({ message: 'Token inválido o vencido' });
+    return responderError(res, 401, 'Token inválido o vencido');
   }
 };
 

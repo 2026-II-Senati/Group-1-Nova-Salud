@@ -1,66 +1,82 @@
 const db = require('../db');
+const { responderError, traducirErrorBase, asyncHandler } = require('../utils/errors');
 
-const listar = async (req, res) => {
+const texto = (valor) => (typeof valor === 'string' ? valor.trim() : '');
+
+const listar = asyncHandler(async (req, res) => {
   try {
     const [rows] = await db.query('SELECT id, nombre FROM categorias');
     res.json(rows);
   } catch (error) {
+    const traducido = traducirErrorBase(error);
+    if (traducido) {
+      return responderError(res, traducido.status, traducido.message);
+    }
     console.error('Error en GET /api/categorias:', error);
-    res.status(500).json({ message: 'Error interno del servidor' });
+    return responderError(res, 500, 'Error interno del servidor');
   }
-};
+});
 
-const crear = async (req, res) => {
-  const { nombre } = req.body;
+const crear = asyncHandler(async (req, res) => {
+  const { nombre } = req.body || {};
 
-  if (!nombre || !nombre.trim()) {
-    return res.status(400).json({ message: 'El nombre es requerido' });
+  if (!texto(nombre)) {
+    return responderError(res, 400, 'El nombre es requerido');
   }
 
   try {
     const [existe] = await db.query(
       'SELECT id FROM categorias WHERE nombre = ?',
-      [nombre.trim()]
+      [texto(nombre)]
     );
 
     if (existe.length > 0) {
-      return res.status(400).json({ message: 'La categoría ya existe' });
+      return responderError(res, 400, 'La categoría ya existe');
     }
 
     const [resultado] = await db.query(
       'INSERT INTO categorias (nombre) VALUES (?)',
-      [nombre.trim()]
+      [texto(nombre)]
     );
 
-    res.status(201).json({ id: resultado.insertId, nombre: nombre.trim() });
+    res.status(201).json({ id: resultado.insertId, nombre: texto(nombre) });
   } catch (error) {
+    const traducido = traducirErrorBase(error);
+    if (traducido) {
+      return responderError(res, traducido.status, traducido.message);
+    }
     console.error('Error en POST /api/categorias:', error);
-    res.status(500).json({ message: 'Error interno del servidor' });
+    return responderError(res, 500, 'Error interno del servidor');
   }
-};
-const editar = async (req, res) => {
-  const { id } = req.params;
-  const { nombre } = req.body;
+});
 
-  if (!nombre || !nombre.trim()) {
-    return res.status(400).json({ message: 'El nombre es requerido' });
+const editar = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+  const { nombre } = req.body || {};
+
+  if (!texto(nombre)) {
+    return responderError(res, 400, 'El nombre es requerido');
   }
 
   try {
     const [resultado] = await db.query(
       'UPDATE categorias SET nombre = ? WHERE id = ?',
-      [nombre.trim(), id]
+      [texto(nombre), id]
     );
 
     if (resultado.affectedRows === 0) {
-      return res.status(404).json({ message: 'Categoría no encontrada' });
+      return responderError(res, 404, 'Categoría no encontrada');
     }
 
-    res.json({ id: Number(id), nombre: nombre.trim() });
+    res.json({ id: Number(id), nombre: texto(nombre) });
   } catch (error) {
+    const traducido = traducirErrorBase(error);
+    if (traducido) {
+      return responderError(res, traducido.status, traducido.message);
+    }
     console.error('Error en PUT /api/categorias:', error);
-    res.status(500).json({ message: 'Error interno del servidor' });
+    return responderError(res, 500, 'Error interno del servidor');
   }
-};
+});
 
-module.exports = { listar , crear, editar };
+module.exports = { listar, crear, editar };

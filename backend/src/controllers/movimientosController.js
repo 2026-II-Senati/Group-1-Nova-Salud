@@ -1,11 +1,28 @@
 const db = require('../db');
+const { responderError, traducirErrorBase, asyncHandler } = require('../utils/errors');
 
-const listar = async (req, res) => {
+const formatoFecha = /^\d{4}-\d{2}-\d{2}$/;
+
+const esFechaReal = (valor) => {
+  if (!formatoFecha.test(valor)) {
+    return false;
+  }
+  const [anio, mes, dia] = valor.split('-').map(Number);
+  const fecha = new Date(Date.UTC(anio, mes - 1, dia));
+  return fecha.getUTCFullYear() === anio
+    && fecha.getUTCMonth() === mes - 1
+    && fecha.getUTCDate() === dia;
+};
+
+const listar = asyncHandler(async (req, res) => {
   const { desde, hasta } = req.query;
-  const formatoFecha = /^\d{4}-\d{2}-\d{2}$/;
 
-  if ((desde && !formatoFecha.test(desde)) || (hasta && !formatoFecha.test(hasta))) {
-    return res.status(400).json({ message: 'Las fechas deben tener formato YYYY-MM-DD' });
+  if ((desde && !esFechaReal(desde)) || (hasta && !esFechaReal(hasta))) {
+    return responderError(res, 400, 'Las fechas deben tener formato YYYY-MM-DD');
+  }
+
+  if (desde && hasta && desde > hasta) {
+    return responderError(res, 400, 'La fecha "desde" no puede ser posterior a "hasta"');
   }
 
   try {
@@ -32,10 +49,13 @@ const listar = async (req, res) => {
     const [rows] = await db.query(sql, params);
     res.json(rows);
   } catch (error) {
+    const traducido = traducirErrorBase(error);
+    if (traducido) {
+      return responderError(res, traducido.status, traducido.message);
+    }
     console.error('Error en GET /api/movimientos:', error);
-    res.status(500).json({ message: 'Error interno del servidor' });
+    return responderError(res, 500, 'Error interno del servidor');
   }
-};
-
+});
 
 module.exports = { listar };
