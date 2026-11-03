@@ -28,5 +28,16 @@ const cambiarEstado = async (req, res) => {
     res.status(500).json({ message: 'Error interno del servidor' });
   }
 };
+const listar = async (req, res) => {
+  try {
+    const [rows] = await db.query(
+      'SELECT id, nombre, email, rol_id, activo FROM usuarios ORDER BY id'
+    );
+    res.json(rows);
+  } catch (error) {
+    console.error('Error en GET /api/usuarios:', error);
+    res.status(500).json({ message: 'Error interno del servidor' });
+  }
+};
 
-module.exports = { cambiarEstado };
+module.exports = { cambiarEstado, listar };
