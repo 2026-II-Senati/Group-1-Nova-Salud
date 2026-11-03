@@ -34,6 +34,8 @@ const NOMBRE_MAXIMO = 100;
 const PRECIO_MAXIMO = 99999999.99;
 const ENTERO_MAXIMO = 2147483647;
 
+const tieneMaximoDosDecimales = (valor) => /^\d+(\.\d{1,2})?$/.test(valor);
+
 const esEnteroValido = (valor) =>
   valor !== "" &&
   Number.isInteger(Number(valor)) &&
@@ -51,6 +53,8 @@ const validar = (form) => {
     errores.precio = "Ingresa un precio de al menos 0.01.";
   else if (Number(form.precio) > PRECIO_MAXIMO)
     errores.precio = "El precio no puede pasar de 99,999,999.99.";
+  else if (!tieneMaximoDosDecimales(form.precio))
+    errores.precio = "El precio puede tener como máximo 2 decimales.";
 
   if (!esEnteroValido(form.stock))
     errores.stock = "Ingresa un stock entero entre 0 y 2,147,483,647.";
