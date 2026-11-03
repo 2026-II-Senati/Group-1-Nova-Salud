@@ -153,21 +153,49 @@ const registrar = asyncHandler(async (req, res) => {
   }
 });
 
-const listar = asyncHandler(async (req, res) => {
-  try {
-    const [rows] = await db.query(
-      'SELECT id, fecha, total, usuario_id FROM ventas ORDER BY fecha DESC'
-    );
-    res.json(rows);
-  } catch (error) {
-    const traducido = traducirErrorBase(error);
-    if (traducido) {
-      return responderError(res, traducido.status, traducido.message);
-    }
-    console.error('Error en GET /api/ventas:', error);
-    return responderError(res, 500, 'Error interno del servidor');
-  }
-});
+    const listar = async (req, res) => {
+      const { desde, hasta, vendedor } = req.query;
+      const formatoFecha = /^\d{4}-\d{2}-\d{2}$/;
+
+      if ((desde && !formatoFecha.test(desde)) || (hasta && !formatoFecha.test(hasta))) {
+        return res.status(400).json({ message: 'Las fechas deben tener formato YYYY-MM-DD' });
+      }
+
+      try {
+        let sql = `
+          SELECT v.id, v.fecha, v.total, v.usuario_id, u.nombre AS vendedor
+          FROM ventas v
+          LEFT JOIN usuarios u ON v.usuario_id = u.id
+        `;
+        const condiciones = [];
+        const params = [];
+
+        if (desde) {
+          condiciones.push('DATE(v.fecha) >= ?');
+          params.push(desde);
+        }
+        if (hasta) {
+          condiciones.push('DATE(v.fecha) <= ?');
+          params.push(hasta);
+        }
+        if (vendedor) {
+          condiciones.push('u.nombre LIKE ?');
+          params.push(`%${vendedor}%`);
+        }
+
+        if (condiciones.length > 0) {
+          sql += ' WHERE ' + condiciones.join(' AND ');
+        }
+
+        sql += ' ORDER BY v.fecha DESC';
+
+        const [rows] = await db.query(sql, params);
+        res.json(rows);
+      } catch (error) {
+        console.error('Error en GET /api/ventas:', error);
+        res.status(500).json({ message: 'Error interno del servidor' });
+      }};
+
 
 const detalle = asyncHandler(async (req, res) => {
   const id = idValido(req.params.id);
