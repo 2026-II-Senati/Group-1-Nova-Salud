@@ -38,6 +38,7 @@ function Login() {
   const [formularioActivo, setFormularioActivo] = useState(false);
   const [presentacionAbierta, setPresentacionAbierta] = useState(false);
   const navigate = useNavigate();
+  const formularioEnUso = formularioActivo || loading || Boolean(error)
 
   const validar = () => {
     const errs = {};
@@ -75,18 +76,18 @@ function Login() {
     if (presentacionAbierta) {
       if (e.clientX >= mitad) setPresentacionAbierta(false);
     } else {
-      const limite = formularioActivo ? 64 : mitad;
+      const limite = formularioEnUso ? 64 : mitad;
       if (e.clientX < limite) setPresentacionAbierta(true);
     }
   };
 
   const anchoVerde = presentacionAbierta
     ? "lg:w-full"
-    : formularioActivo
+    : formularioEnUso
       ? "lg:w-16"
       : "lg:w-1/2";
-  const margenFormulario = formularioActivo ? "lg:pl-0" : "lg:pl-[50%]";
-  const verdeCerrado = formularioActivo && !presentacionAbierta;
+  const margenFormulario = formularioEnUso ? "lg:pl-0" : "lg:pl-[50%]";
+  const verdeCerrado = formularioEnUso && !presentacionAbierta;
 
   return (
     <main
@@ -269,7 +270,7 @@ function Login() {
             verdeCerrado ? "lg:opacity-0" : "lg:opacity-100"
           }`}
         >
-          <MarcaLogo className="h-14 w-14 lg:h-24 lg:w-24" />
+          <MarcaLogo className="h-28 w-28 lg:h-44 lg:w-44" />
           <p className="text-4xl font-bold tracking-tight lg:text-6xl xl:text-7xl">
             Nova Salud
           </p>
