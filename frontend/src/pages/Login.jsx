@@ -14,7 +14,7 @@ const BENEFICIOS = [
   },
   {
     titulo: "Ventas en segundos",
-    texto: "Busca, agrega al carrito y cobra sin vueltas.",
+    texto: "Busca, agrega al carrito y ventas sin vueltas.",
     icono: "M6 3h12v18l-3-2-3 2-3-2-3 2z M9 8h6 M9 12h6",
   },
   {
@@ -23,8 +23,8 @@ const BENEFICIOS = [
     icono: "M6 16v-5a6 6 0 0 1 12 0v5l2 2H4z M10 21h4",
   },
   {
-    titulo: "Todo en orden",
-    texto: "Proveedores y categorías clasificados y a la mano.",
+    titulo: "Historial de movimientos",
+    texto: "Revisa cada entrada y salida de tu inventario.",
     icono: "M3 7h6l2 2h10v10H3z",
   },
 ];
@@ -38,6 +38,7 @@ function Login() {
   const [formularioActivo, setFormularioActivo] = useState(false);
   const [presentacionAbierta, setPresentacionAbierta] = useState(false);
   const navigate = useNavigate();
+  const formularioEnUso = formularioActivo || loading || Boolean(error)
 
   const validar = () => {
     const errs = {};
@@ -75,18 +76,18 @@ function Login() {
     if (presentacionAbierta) {
       if (e.clientX >= mitad) setPresentacionAbierta(false);
     } else {
-      const limite = formularioActivo ? 64 : mitad;
+      const limite = formularioEnUso ? 64 : mitad;
       if (e.clientX < limite) setPresentacionAbierta(true);
     }
   };
 
   const anchoVerde = presentacionAbierta
     ? "lg:w-full"
-    : formularioActivo
+    : formularioEnUso
       ? "lg:w-16"
       : "lg:w-1/2";
-  const margenFormulario = formularioActivo ? "lg:pl-0" : "lg:pl-[50%]";
-  const verdeCerrado = formularioActivo && !presentacionAbierta;
+  const margenFormulario = formularioEnUso ? "lg:pl-0" : "lg:pl-[50%]";
+  const verdeCerrado = formularioEnUso && !presentacionAbierta;
 
   return (
     <main
@@ -269,7 +270,7 @@ function Login() {
             verdeCerrado ? "lg:opacity-0" : "lg:opacity-100"
           }`}
         >
-          <MarcaLogo className="h-14 w-14 lg:h-24 lg:w-24" />
+          <MarcaLogo className="h-28 w-28 lg:h-44 lg:w-44" />
           <p className="text-4xl font-bold tracking-tight lg:text-6xl xl:text-7xl">
             Nova Salud
           </p>
