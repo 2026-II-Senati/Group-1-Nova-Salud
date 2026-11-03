@@ -3,6 +3,7 @@ import ProtectedRoute from "./components/ProtectedRoute";
 import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
 import Inventario from "./pages/Inventario";
+import HistorialVentas from "./pages/HistorialVentas";
 import Categorias from "./pages/Categorias";
 import Proveedores from "./pages/Proveedores";
 import Alertas from "./pages/Alertas";
@@ -28,6 +29,7 @@ function App() {
           </Route>
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/inventario" element={<Inventario />} />
+          <Route path="/historial-ventas" element={<HistorialVentas />} />
           <Route path="/historial-inventario" element={<HistorialInventario />} />
           <Route path="/categorias" element={<Categorias />} />
           <Route path="/proveedores" element={<Proveedores />} />
