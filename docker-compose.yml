@@ -1,0 +1,18 @@
+services:
+  backend:
+    build: ./backend
+    container_name: nova-backend
+    ports:
+      - "3000:3000"
+    env_file:
+      - ./backend/.env
+    restart: unless-stopped
+
+  frontend:
+    build: ./frontend
+    container_name: nova-frontend
+    ports:
+      - "5173:5173"
+    depends_on:
+      - backend
+    restart: unless-stopped
