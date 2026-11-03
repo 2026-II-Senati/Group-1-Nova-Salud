@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { login } from "../services/auth";
-import MarcaLogo from '../components/MarcaLogo'
+import MarcaLogo from "../components/MarcaLogo";
 
 // Ancho mínimo de pantalla para usar la portada dividida (lg de Tailwind)
 const ANCHO_PORTADA = 1024;
@@ -34,16 +34,31 @@ function Login() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [errores, setErrores] = useState({});
   const [formularioActivo, setFormularioActivo] = useState(false);
   const [presentacionAbierta, setPresentacionAbierta] = useState(false);
   const navigate = useNavigate();
 
+  const validar = () => {
+    const errs = {};
+    if (!email.trim()) {
+      errs.email = "El correo es obligatorio.";
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
+      errs.email = "Escribe un correo válido, por ejemplo nombre@correo.com.";
+    }
+    if (!password) errs.password = "La contraseña es obligatoria.";
+    return errs;
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
+    const errs = validar();
+    setErrores(errs);
+    if (Object.keys(errs).length > 0) return;
     setLoading(true);
     try {
-      await login(email, password);
+      await login(email.trim(), password);
       navigate("/dashboard");
     } catch (err) {
       setError(err.message);
@@ -84,6 +99,7 @@ function Login() {
         className={`tapiz flex flex-1 items-center justify-center px-4 py-10 transition-[padding] duration-700 ease-in-out motion-reduce:transition-none lg:absolute lg:inset-0 lg:pr-0 ${margenFormulario}`}
       >
         <form
+          noValidate
           onSubmit={handleSubmit}
           onFocus={() => setFormularioActivo(true)}
           onBlur={(e) => {
@@ -105,9 +121,19 @@ function Login() {
               id="email"
               type="email"
               value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="campo"
+              onChange={(e) => {
+                setEmail(e.target.value);
+                setErrores((p) => ({ ...p, email: "" }));
+              }}
+              aria-invalid={Boolean(errores.email)}
+              aria-describedby={errores.email ? "error-email" : undefined}
+              className={`campo ${errores.email ? "campo-error" : ""}`}
             />
+            {errores.email && (
+              <p id="error-email" role="alert" className="texto-error">
+                {errores.email}
+              </p>
+            )}
           </div>
 
           <div className="flex flex-col gap-1">
@@ -118,9 +144,19 @@ function Login() {
               id="password"
               type="password"
               value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="campo"
+              onChange={(e) => {
+                setPassword(e.target.value);
+                setErrores((p) => ({ ...p, password: "" }));
+              }}
+              aria-invalid={Boolean(errores.password)}
+              aria-describedby={errores.password ? "error-password" : undefined}
+              className={`campo ${errores.password ? "campo-error" : ""}`}
             />
+            {errores.password && (
+              <p id="error-password" role="alert" className="texto-error">
+                {errores.password}
+              </p>
+            )}
           </div>
 
           {error && (
