@@ -9,6 +9,8 @@ import Alertas from "./pages/Alertas";
 import Pos from "./pages/Pos";
 import { HistorialInventario } from "./pages/HistorialInventario";
 import Layout from "./components/Layout";
+import Usuarios from "./pages/Usuarios";
+import RutaAdmin from "./components/RutaAdmin";
 
 function App() {
   return (
@@ -18,6 +20,10 @@ function App() {
 
       {/* Pantallas con barra lateral */}
       <Route element={<Layout />}>
+        {/* Solo administradores */}
+        <Route element={<RutaAdmin />}>
+          <Route path="/usuarios" element={<Usuarios />} />
+        </Route>
         <Route path="/inventario" element={<Inventario />} />
         <Route path="/historial-inventario" element={<HistorialInventario />} />
         <Route path="/categorias" element={<Categorias />} />
