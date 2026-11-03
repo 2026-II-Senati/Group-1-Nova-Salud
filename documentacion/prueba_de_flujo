@@ -1,0 +1,33 @@
+# [PS2I-46] Reporte de Prueba del Flujo Completo (End-to-End)
+
+**Proyecto:** Nova Salud  
+**Fecha:** 2026-11-02  
+**Responsable:** Cesar Rosendo Loayza Manchego  
+
+---
+
+### Objetivo
+Validar la integración y navegación continua del sistema recorriendo el flujo principal completo (Login -> Inventario -> Crear Producto -> Venta POS -> Alertas) sin errores en consola ni recargas de página.
+
+---
+
+### CASOS DE PRUEBA EJECUTADOS
+
+#### 1. Recorrido del flujo E2E continuo
+- **Acción:** Ejecutar en secuencia: inicio de sesión, consulta de inventario, creación de producto, procesamiento de venta en POS y verificación de alertas.
+- **Esperado:** Completar todo el flujo dinámicamente sin interrumpir la sesión ni recargar la página.
+- **Resultado:** La interacción entre módulos responde de forma fluida manteniendo el estado de la aplicación sin recargados.
+- **Estado:** Funcional
+
+#### 2. Monitoreo de consola de desarrollador (F12)
+- **Acción:** Inspeccionar la consola del navegador durante todo el recorrido del sistema.
+- **Esperado:** Ausencia total de excepciones no controladas o errores críticos en rojo.
+- **Resultado:** No se registraron fallos ni errores de ejecución en la consola durante el proceso.
+- **Estado:** Funcional
+
+---
+
+### Conclusiones de Validación
+- El flujo integral de la aplicación opera de manera estable de extremo a extremo.
+- La navegación responde según los estándares de una SPA (Single Page Application) sin recargas de página.
+- No se detectaron fallos de ejecución ni inconsistencias en la consola del desarrollador.
