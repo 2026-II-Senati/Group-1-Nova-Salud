@@ -1,5 +1,6 @@
 import { NavLink, Outlet, useNavigate } from "react-router-dom";
 import MarcaLogo from "./MarcaLogo";
+import { esAdmin } from "../services/sesion";
 
 const ENLACES = [
   { a: "/dashboard", texto: "Dashboard" },
@@ -21,6 +22,9 @@ const claseEnlace = ({ isActive }) =>
 const Layout = () => {
   const navigate = useNavigate();
   const haySesion = Boolean(localStorage.getItem("token"));
+  const enlaces = esAdmin()
+    ? [...ENLACES, { a: "/usuarios", texto: "Usuarios" }]
+    : ENLACES;
 
   const cerrarSesion = () => {
     localStorage.removeItem("token");
@@ -32,14 +36,16 @@ const Layout = () => {
       <aside className="border-b border-linea bg-white lg:sticky lg:top-0 lg:flex lg:h-screen lg:w-60 lg:shrink-0 lg:flex-col lg:border-b-0 lg:border-r">
         <div className="flex items-center gap-3 px-4 py-4 lg:px-5 lg:py-6">
           <MarcaLogo sobre="blanco" className="h-9 w-9" />
-          <span className="text-xl font-bold text-botica-oscuro">Nova Salud</span>
+          <span className="text-xl font-bold text-botica-oscuro">
+            Nova Salud
+          </span>
         </div>
 
         <nav
           aria-label="Principal"
           className="flex gap-1 overflow-x-auto px-3 pb-3 lg:flex-1 lg:flex-col lg:overflow-visible lg:pb-5"
         >
-          {ENLACES.map((e) => (
+          {enlaces.map((e) => (
             <NavLink key={e.a} to={e.a} className={claseEnlace}>
               {e.texto}
             </NavLink>
