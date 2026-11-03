@@ -18,22 +18,21 @@ function App() {
       {/* Ruta pública de login */}
       <Route path="/login" element={<Login />} />
 
-      {/* Pantallas con barra lateral */}
-      <Route element={<Layout />}>
-        {/* Solo administradores */}
-        <Route element={<RutaAdmin />}>
-          <Route path="/usuarios" element={<Usuarios />} />
-        </Route>
-        <Route path="/inventario" element={<Inventario />} />
-        <Route path="/historial-inventario" element={<HistorialInventario />} />
-        <Route path="/categorias" element={<Categorias />} />
-        <Route path="/proveedores" element={<Proveedores />} />
-        <Route path="/alertas" element={<Alertas />} />
-        <Route path="/pos" element={<Pos />} />
-
-        {/* Rutas privadas envueltas con ProtectedRoute */}
-        <Route element={<ProtectedRoute />}>
+      {/* Pantallas privadas: requieren sesión iniciada */}
+      <Route element={<ProtectedRoute />}>
+        {/* Pantallas con barra lateral */}
+        <Route element={<Layout />}>
+          {/* Solo administradores */}
+          <Route element={<RutaAdmin />}>
+            <Route path="/usuarios" element={<Usuarios />} />
+          </Route>
           <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/inventario" element={<Inventario />} />
+          <Route path="/historial-inventario" element={<HistorialInventario />} />
+          <Route path="/categorias" element={<Categorias />} />
+          <Route path="/proveedores" element={<Proveedores />} />
+          <Route path="/alertas" element={<Alertas />} />
+          <Route path="/pos" element={<Pos />} />
         </Route>
       </Route>
 
