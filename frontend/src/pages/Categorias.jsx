@@ -46,6 +46,10 @@ const Categorias = () => {
       setErrorForm("El nombre es obligatorio.");
       return;
     }
+    if (nombre.trim().length > 100) {
+      setErrorForm("El nombre no puede pasar de 100 caracteres.");
+      return;
+    }
 
     setEnviando(true);
     setErrorForm("");

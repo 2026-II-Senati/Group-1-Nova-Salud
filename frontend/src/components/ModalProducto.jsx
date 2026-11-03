@@ -30,18 +30,37 @@ const formDesdeProducto = (p) =>
 
 const claseCampo = (hayError) => `campo ${hayError ? "campo-error" : ""}`;
 
+const NOMBRE_MAXIMO = 100;
+const PRECIO_MAXIMO = 99999999.99;
+const ENTERO_MAXIMO = 2147483647;
+
+const tieneMaximoDosDecimales = (valor) => /^\d+(\.\d{1,2})?$/.test(valor);
+
 const esEnteroValido = (valor) =>
-  valor !== "" && Number.isInteger(Number(valor)) && Number(valor) >= 0;
+  valor !== "" &&
+  Number.isInteger(Number(valor)) &&
+  Number(valor) >= 0 &&
+  Number(valor) <= ENTERO_MAXIMO;
 
 const validar = (form) => {
   const errores = {};
-  if (!form.nombre.trim()) errores.nombre = "El nombre es obligatorio.";
-  if (form.precio === "" || Number(form.precio) <= 0)
-    errores.precio = "Ingresa un precio mayor a 0.";
+  const nombre = form.nombre.trim();
+  if (!nombre) errores.nombre = "El nombre es obligatorio.";
+  else if (nombre.length > NOMBRE_MAXIMO)
+    errores.nombre = `El nombre no puede pasar de ${NOMBRE_MAXIMO} caracteres.`;
+
+  if (form.precio === "" || Number(form.precio) < 0.01)
+    errores.precio = "Ingresa un precio de al menos 0.01.";
+  else if (Number(form.precio) > PRECIO_MAXIMO)
+    errores.precio = "El precio no puede pasar de 99,999,999.99.";
+  else if (!tieneMaximoDosDecimales(form.precio))
+    errores.precio = "El precio puede tener como máximo 2 decimales.";
+
   if (!esEnteroValido(form.stock))
-    errores.stock = "Ingresa un stock entero (0 o más).";
+    errores.stock = "Ingresa un stock entero entre 0 y 2,147,483,647.";
   if (!esEnteroValido(form.stock_minimo))
-    errores.stock_minimo = "Ingresa un stock mínimo entero (0 o más).";
+    errores.stock_minimo =
+      "Ingresa un stock mínimo entero entre 0 y 2,147,483,647.";
   if (!form.categoria_id) errores.categoria_id = "Selecciona una categoría.";
   if (!form.proveedor_id) errores.proveedor_id = "Selecciona un proveedor.";
   return errores;
