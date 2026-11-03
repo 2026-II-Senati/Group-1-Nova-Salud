@@ -12,13 +12,23 @@ const dashboardRoutes = require('./routes/dashboardRoutes');
 const movimientosRoutes = require('./routes/movimientosRoutes');
 
 const pool = require("./db");
+const { errores } = require("./utils/errors");
 const cors = require('cors');
 
 const app = express();
 app.use(cors());
 const port = process.env.PORT || 3000;
 
+// Un body con JSON mal formado lo detecta express.json() y lo marca con
+// error.type = 'entity.parse.failed'. Se captura aqui para responder 400 con el
+// formato comun en vez de dejar que llegue al manejador de 500.
 app.use(express.json());
+app.use((error, _request, response, next) => {
+  if (error && (error.type === 'entity.parse.failed' || (error instanceof SyntaxError && 'body' in error))) {
+    return errores.BAD_JSON(_request, response);
+  }
+  return next(error);
+});
 
 app.get("/health", async (_request, response) => {
   try {
@@ -39,6 +49,10 @@ app.use('/api/proveedores', proveedoresRoutes);
 app.use('/api/alertas', alertasRoutes);
 app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/movimientos', movimientosRoutes);
+
+// Respuestas de error con el formato comun { "message": "..." }
+app.use(errores.RUTA_NO_ENCONTRADA);
+app.use(errores.INTERNO);
 
 app.listen(port, () => {
   console.log(`Nova Salud API activa en http://localhost:${port}`);

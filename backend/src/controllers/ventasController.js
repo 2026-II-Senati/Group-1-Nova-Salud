@@ -1,23 +1,45 @@
 const db = require('../db');
+const { responderError, traducirErrorBase, asyncHandler } = require('../utils/errors');
 
-const registrar = async (req, res) => {
-  const { usuario_id, productos } = req.body;
+const idValido = (valor) => {
+  const n = Number(valor);
+  return Number.isInteger(n) && n > 0 ? n : null;
+};
 
-  if (!usuario_id || !Array.isArray(productos) || productos.length === 0) {
-    return res.status(400).json({ message: 'usuario_id y productos son requeridos' });
+// Error de la propia logica de venta: siempre es un dato invalido del usuario.
+class ErrorVenta extends Error {}
+
+const registrar = asyncHandler(async (req, res) => {
+  const { usuario_id, productos } = req.body || {};
+
+  const usuarioIdNum = idValido(usuario_id);
+
+  if (usuarioIdNum === null || !Array.isArray(productos) || productos.length === 0) {
+    return responderError(res, 400, 'usuario_id y productos son requeridos');
+  }
+
+  if (productos.length > 100) {
+    return responderError(res, 400, 'Una venta no puede tener más de 100 productos distintos');
   }
 
   for (const item of productos) {
-    if (!item.producto_id || !Number.isInteger(item.cantidad) || item.cantidad <= 0) {
-      return res.status(400).json({
-        message: 'Cada producto debe tener producto_id y una cantidad entera mayor a cero'
-      });
+    if (!item || typeof item !== 'object') {
+      return responderError(res, 400, 'Cada producto debe ser un objeto con producto_id y cantidad');
+    }
+
+    if (idValido(item.producto_id) === null || !Number.isInteger(item.cantidad) || item.cantidad <= 0) {
+      return responderError(res, 400, 'Cada producto debe tener producto_id y una cantidad entera mayor a cero');
+    }
+
+    if (item.cantidad > 100000) {
+      return responderError(res, 400, 'La cantidad de un producto no puede superar 100000');
     }
   }
 
   const agrupados = {};
   for (const item of productos) {
-    agrupados[item.producto_id] = (agrupados[item.producto_id] || 0) + item.cantidad;
+    const clave = idValido(item.producto_id);
+    agrupados[clave] = (agrupados[clave] || 0) + item.cantidad;
   }
 
   const items = Object.entries(agrupados).map(([id, cantidad]) => ({
@@ -25,10 +47,31 @@ const registrar = async (req, res) => {
     cantidad
   }));
 
-  const conexion = await db.getConnection();
+  let conexion;
+
+  try {
+    conexion = await db.getConnection();
+  } catch (error) {
+    const traducido = traducirErrorBase(error);
+    console.error('Error al obtener conexion para venta:', error.message);
+    return responderError(
+      res,
+      traducido ? traducido.status : 500,
+      traducido ? traducido.message : 'Error interno del servidor'
+    );
+  }
 
   try {
     await conexion.beginTransaction();
+
+    const [usuarios] = await conexion.query(
+      'SELECT id FROM usuarios WHERE id = ? AND activo = 1',
+      [usuarioIdNum]
+    );
+
+    if (usuarios.length === 0) {
+      throw new ErrorVenta('El usuario de la venta no existe o está inactivo');
+    }
 
     let total = 0;
     const detalle = [];
@@ -40,13 +83,13 @@ const registrar = async (req, res) => {
       );
 
       if (filas.length === 0) {
-        throw new Error(`El producto ${item.producto_id} no existe`);
+        throw new ErrorVenta(`El producto ${item.producto_id} no existe`);
       }
 
       const producto = filas[0];
 
       if (producto.stock < item.cantidad) {
-        throw new Error(`Stock insuficiente de ${producto.nombre}`);
+        throw new ErrorVenta(`Stock insuficiente de ${producto.nombre}`);
       }
 
       total += Number(producto.precio) * item.cantidad;
@@ -57,9 +100,11 @@ const registrar = async (req, res) => {
       });
     }
 
+    total = Math.round(total * 100) / 100;
+
     const [venta] = await conexion.query(
       'INSERT INTO ventas (total, usuario_id) VALUES (?, ?)',
-      [total, usuario_id]
+      [total, usuarioIdNum]
     );
 
     for (const d of detalle) {
@@ -81,30 +126,55 @@ const registrar = async (req, res) => {
 
     await conexion.commit();
 
-    res.status(201).json({ venta_id: venta.insertId, total });
+    return res.status(201).json({ venta_id: venta.insertId, total });
 
   } catch (error) {
-    await conexion.rollback();
-    console.error('Error al registrar venta:', error.message);
-    res.status(400).json({ message: error.message });
+    try {
+      await conexion.rollback();
+    } catch (errorRollback) {
+      console.error('Error al revertir la transaccion:', errorRollback.message);
+    }
+
+    if (error instanceof ErrorVenta) {
+      console.error('Venta rechazada:', error.message);
+      return responderError(res, 400, error.message);
+    }
+
+    const traducido = traducirErrorBase(error);
+    if (traducido) {
+      console.error('Venta rechazada por la base:', error.message);
+      return responderError(res, traducido.status, traducido.message);
+    }
+
+    console.error('Error al registrar venta:', error);
+    return responderError(res, 500, 'Error interno del servidor');
   } finally {
     conexion.release();
   }
-};
-const listar = async (req, res) => {
+});
+
+const listar = asyncHandler(async (req, res) => {
   try {
     const [rows] = await db.query(
       'SELECT id, fecha, total, usuario_id FROM ventas ORDER BY fecha DESC'
     );
     res.json(rows);
   } catch (error) {
+    const traducido = traducirErrorBase(error);
+    if (traducido) {
+      return responderError(res, traducido.status, traducido.message);
+    }
     console.error('Error en GET /api/ventas:', error);
-    res.status(500).json({ message: 'Error interno del servidor' });
+    return responderError(res, 500, 'Error interno del servidor');
   }
-};
+});
 
-const detalle = async (req, res) => {
-  const { id } = req.params;
+const detalle = asyncHandler(async (req, res) => {
+  const id = idValido(req.params.id);
+
+  if (id === null) {
+    return responderError(res, 400, 'El id de la venta no es válido');
+  }
 
   try {
     const [ventas] = await db.query(
@@ -113,7 +183,7 @@ const detalle = async (req, res) => {
     );
 
     if (ventas.length === 0) {
-      return res.status(404).json({ message: 'Venta no encontrada' });
+      return responderError(res, 404, 'Venta no encontrada');
     }
 
     const [items] = await db.query(
@@ -126,12 +196,16 @@ const detalle = async (req, res) => {
 
     res.json({ ...ventas[0], detalle: items });
   } catch (error) {
+    const traducido = traducirErrorBase(error);
+    if (traducido) {
+      return responderError(res, traducido.status, traducido.message);
+    }
     console.error('Error en GET /api/ventas/:id:', error);
-    res.status(500).json({ message: 'Error interno del servidor' });
+    return responderError(res, 500, 'Error interno del servidor');
   }
-};
+});
 
-const hoy = async (req, res) => {
+const hoy = asyncHandler(async (req, res) => {
   try {
     const [rows] = await db.query(
       `SELECT id, fecha, total, usuario_id
@@ -141,10 +215,13 @@ const hoy = async (req, res) => {
     );
     res.json(rows);
   } catch (error) {
+    const traducido = traducirErrorBase(error);
+    if (traducido) {
+      return responderError(res, traducido.status, traducido.message);
+    }
     console.error('Error en GET /api/ventas/hoy:', error);
-    res.status(500).json({ message: 'Error interno del servidor' });
+    return responderError(res, 500, 'Error interno del servidor');
   }
-};
-
+});
 
 module.exports = { registrar, listar, detalle, hoy };

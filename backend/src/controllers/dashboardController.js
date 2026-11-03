@@ -1,4 +1,5 @@
 const db = require('../db');
+const { responderError, traducirErrorBase, asyncHandler } = require('../utils/errors');
 
 const fmt = (d) => {
   const anio = d.getFullYear();
@@ -7,7 +8,7 @@ const fmt = (d) => {
   return `${anio}-${mes}-${dia}`;
 };
 
-const metricas = async (req, res) => {
+const metricas = asyncHandler(async (req, res) => {
   try {
     const [[ventas]] = await db.query(
       'SELECT COUNT(*) AS total FROM ventas WHERE DATE(fecha) = CURDATE()'
@@ -25,12 +26,16 @@ const metricas = async (req, res) => {
       productos_bajo_stock: Number(bajoStock.total)
     });
   } catch (error) {
+    const traducido = traducirErrorBase(error);
+    if (traducido) {
+      return responderError(res, traducido.status, traducido.message);
+    }
     console.error('Error en GET /api/dashboard/metricas:', error);
-    res.status(500).json({ message: 'Error interno del servidor' });
+    return responderError(res, 500, 'Error interno del servidor');
   }
-};
+});
 
-const ventasSemana = async (req, res) => {
+const ventasSemana = asyncHandler(async (req, res) => {
   try {
     const [rows] = await db.query(
       `SELECT DATE(fecha) AS dia, SUM(total) AS total
@@ -59,9 +64,13 @@ const ventasSemana = async (req, res) => {
 
     res.json(semana);
   } catch (error) {
+    const traducido = traducirErrorBase(error);
+    if (traducido) {
+      return responderError(res, traducido.status, traducido.message);
+    }
     console.error('Error en GET /api/dashboard/ventas-semana:', error);
-    res.status(500).json({ message: 'Error interno del servidor' });
+    return responderError(res, 500, 'Error interno del servidor');
   }
-};
+});
 
 module.exports = { metricas, ventasSemana };
