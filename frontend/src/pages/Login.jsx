@@ -14,7 +14,7 @@ const BENEFICIOS = [
   },
   {
     titulo: "Ventas en segundos",
-    texto: "Busca, agrega al carrito y cobra sin vueltas.",
+    texto: "Busca, agrega al carrito y ventas sin vueltas.",
     icono: "M6 3h12v18l-3-2-3 2-3-2-3 2z M9 8h6 M9 12h6",
   },
   {
@@ -23,8 +23,8 @@ const BENEFICIOS = [
     icono: "M6 16v-5a6 6 0 0 1 12 0v5l2 2H4z M10 21h4",
   },
   {
-    titulo: "Todo en orden",
-    texto: "Proveedores y categorías clasificados y a la mano.",
+    titulo: "Historial de movimientos",
+    texto: "Revisa cada entrada y salida de tu inventario.",
     icono: "M3 7h6l2 2h10v10H3z",
   },
 ];
