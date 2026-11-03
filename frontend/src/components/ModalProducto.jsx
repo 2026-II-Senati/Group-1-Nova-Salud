@@ -69,7 +69,7 @@ const validar = (form) => {
 function MensajeError({ id, texto }) {
   if (!texto) return null;
   return (
-    <p id={id} role="alert" className="text-sm text-red-700">
+    <p id={id} role="alert" className="texto-error">
       {texto}
     </p>
   );
@@ -136,7 +136,7 @@ function ModalProducto({
 
   return (
     <div
-      className="fixed inset-0 z-20 flex items-center justify-center bg-slate-900/50 p-4"
+      className="fixed inset-0 z-20 flex items-center justify-center bg-tinta/50 p-4"
       role="dialog"
       aria-modal="true"
       aria-labelledby="titulo-modal"
@@ -153,7 +153,7 @@ function ModalProducto({
         <div className="flex flex-col gap-4">
           {CAMPOS.map((c) => (
             <div key={c.name} className="flex flex-col gap-1">
-              <label htmlFor={c.name} className="text-sm font-semibold">
+              <label htmlFor={c.name} className="etiqueta">
                 {c.label}
               </label>
               <input
@@ -172,7 +172,7 @@ function ModalProducto({
           ))}
 
           <div className="flex flex-col gap-1">
-            <label htmlFor="categoria_id" className="text-sm font-semibold">
+            <label htmlFor="categoria_id" className="etiqueta">
               Categoría
             </label>
             <select
@@ -198,7 +198,7 @@ function ModalProducto({
           </div>
 
           <div className="flex flex-col gap-1">
-            <label htmlFor="proveedor_id" className="text-sm font-semibold">
+            <label htmlFor="proveedor_id" className="etiqueta">
               Proveedor
             </label>
             <select
@@ -225,7 +225,7 @@ function ModalProducto({
         </div>
 
         {errorServidor && (
-          <p role="alert" className="mt-4 text-sm text-red-700">
+          <p role="alert" className="mensaje-error mt-4">
             {errorServidor}
           </p>
         )}
@@ -234,14 +234,14 @@ function ModalProducto({
           <button
             type="button"
             onClick={onCerrar}
-            className="min-h-11 rounded-lg border border-slate-300 px-4 text-sm font-semibold"
+            className="btn btn-secundario"
           >
             Cancelar
           </button>
           <button
             type="submit"
             disabled={enviando}
-            className="min-h-11 rounded-lg bg-teal-700 px-4 text-sm font-semibold text-white hover:bg-teal-800 disabled:opacity-60"
+            className="btn btn-primario"
           >
             {enviando ? "Guardando..." : "Guardar"}
           </button>
