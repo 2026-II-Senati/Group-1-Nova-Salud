@@ -96,6 +96,9 @@ la venta (200), ver el movimiento generado (200).
 - Ningún dato inválido del usuario devuelve 500: todos salen con 400 o 404.
 - Todos los errores usan el mismo formato `{ "message": "..." }`.
 - El frontend sigue funcionando: lee `data.message`, que no cambió de nombre.
-- Nota: la prueba de borrado creó en la base compartida una categoría
-  (`__prueba_ps67b__`) y un producto (`__prueba_ps67__`) con una venta asociada,
-  que quedan como dato de prueba y no se pueden eliminar sin borrar la venta.
+- Los datos de prueba que creó esta verificación se borraron al terminar, en
+  orden inverso (detalle_venta -> ventas -> movimientos -> producto -> categoría),
+  con los COUNT(*) revisados antes y después: quedaron en cero las filas de
+  prueba y las tablas volvieron a 8 productos, 2 ventas, 9 categorías, 3
+  detalle_venta y 3 movimientos. La venta 15 y el producto 24 ya no existen
+  (404 al consultarlos).
