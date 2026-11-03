@@ -29,4 +29,20 @@ const cambiarEstado = async (req, res) => {
   }
 };
 
-module.exports = { cambiarEstado };
+const listar = async (req, res) => {
+  if (req.usuario.rol_id !== 1) {
+    return res.status(403).json({ message: 'Solo un administrador puede ver los usuarios' });
+  }
+
+  try {
+    const [rows] = await db.query(
+      'SELECT id, nombre, email, rol_id, activo FROM usuarios ORDER BY id'
+    );
+    res.json(rows);
+  } catch (error) {
+    console.error('Error en GET /api/usuarios:', error);
+    res.status(500).json({ message: 'Error interno del servidor' });
+  }
+};
+
+module.exports = { cambiarEstado, listar };
