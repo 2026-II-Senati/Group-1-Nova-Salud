@@ -2,7 +2,7 @@
 
   <p>
     <img
-      src="docs/images/Nova-Salud.png"
+      src="docs/images/NovaSalud.png"
       alt="Logo de Nova Salud"
       width="350"
     />
