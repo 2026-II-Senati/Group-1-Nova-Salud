@@ -40,8 +40,9 @@
   - [8.1. Arquitectura de la Solución](#81-arquitectura-de-la-solución)
   - [8.2. Backend, API REST y Base de Datos](#82-backend-api-rest-y-base-de-datos)
   - [8.3. Frontend e Integración con la API](#83-frontend-e-integración-con-la-api)
-  - [8.4. Gestión Colaborativa con Jira y GitHub](#84-gestión-colaborativa-con-jira-y-github)
-  - [8.5. Pruebas y validación](#85-pruebas-y-validación)
+  - [8.4. Módulo de Historial de ventas](#84-módulo-de-historial-de-ventas)
+  - [8.5. Gestión Colaborativa con Jira y GitHub](#85-gestión-colaborativa-con-jira-y-github)
+  - [8.6. Pruebas y validación](#86-pruebas-y-validación)
 - [9. Conclusiones](#9-conclusiones)
 - [10. Recomendaciones](#10-recomendaciones)
 - [11. Referencias bibliográficas](#11-referencias-bibliográficas)
@@ -281,7 +282,7 @@ La solución es una aplicación web full stack formada por un frontend en React,
 | **Categorías** | Listar, crear y editar categorías. | /api/categorias |
 | **Proveedores** | Listar, crear y eliminar proveedores (con validación de productos asociados). | /api/proveedores |
 | **Punto de venta (POS)** | Buscador, carrito, cobro y recibo simple. | /api/ventas |
-| **Ventas** | Registrar venta con transacción, listar ventas, ventas del día y detalle por id. | /api/ventas |
+| **Ventas** | Registrar venta con transacción, historial de ventas con filtros por fecha y vendedor, ventas del día y detalle por id. | /api/ventas |
 | **Movimientos** | Historial de entradas y salidas de stock con filtros por fecha. | /api/movimientos |
 | **Alertas** | Productos con stock igual o menor al mínimo. | /api/alertas |
 | **Dashboard** | Tarjetas de métricas y gráfico de ventas de la semana (Recharts). | /api/dashboard |
@@ -345,7 +346,7 @@ El backend expone una API REST documentada en docs/contrato-api.md. La siguiente
 | **Productos** | `GET /api/productos`<br>`GET /api/productos/buscar`<br>`POST`, `PUT /:id`, `DELETE /:id` | Listado con categoría, búsqueda por nombre y CRUD de productos. |
 | **Categorías** | `GET`, `POST`, `PUT /:id` | Listado, creación y edición de categorías. |
 | **Proveedores** | `GET`, `POST`, `DELETE /:id` | Listado, creación y eliminación de proveedores. |
-| **Ventas** | `POST /api/ventas`<br>`GET /api/ventas`<br>`GET /api/ventas/hoy`<br>`GET /api/ventas/:id` | Registro de venta con transacción, historial, ventas del día y detalle. |
+| **Ventas** | `POST /api/ventas`<br>`GET /api/ventas`<br>`GET /api/ventas/hoy`<br>`GET /api/ventas/:id` | Registro de venta con transacción, historial filtrable por fecha (desde, hasta) y vendedor, ventas del día y detalle con sus productos. |
 | **Movimientos** | `GET /api/movimientos` | Historial de movimientos de stock con filtros por fecha. |
 | **Alertas** | `GET /api/alertas` | Productos con stock igual o menor al stock mínimo. |
 | **Dashboard** | `GET /api/dashboard/metricas`<br>`GET /api/dashboard/ventas-semana` | Métricas generales y ventas de los últimos días. |
@@ -381,12 +382,15 @@ El backend expone una API REST documentada en docs/contrato-api.md. La siguiente
 
 **Estilos compartidos.** El archivo src/index.css define en @theme la paleta de la botica (botica, tinta, papel, línea, alerta y aviso) y en @layer components clases comunes que usan todas las pantallas: .btn con sus variantes (primario, secundario, peligro y chico), .campo y .etiqueta para formularios, .panel, .tabla, .mensaje-error, .mensaje-ok y .titulo-pagina. Así las vistas mantienen el mismo aspecto sin repetir estilos.
 
+**Identidad visual.** El logo de Nova Salud fue desarrollado por James Martel en la tarea PS2I-69 (pull request #82, fusionado en develop el 3 de noviembre de 2026) y reemplaza a la cruz provisional que se usaba hasta entonces. Se incluye en dos versiones SVG dentro de frontend/public: anumka-login.svg, en blanco, para la portada verde del login, y anumka-panel.svg, en el color principal botica (#0f766e), para el menú lateral; además, favicon.svg muestra el logo en la pestaña del navegador. El componente MarcaLogo.jsx es el único lugar que define qué versión se muestra según el fondo (propiedad sobre), por lo que un cambio futuro del logo solo requiere reemplazar esos archivos.
+
 | **Pantalla** | **Ruta** | **Función** |
 |----|----|----|
 | **Login** | /login | Inicio de sesión con correo y contraseña. |
 | **Dashboard** | /dashboard | Tarjetas de métricas y gráfico de ventas semanales (ruta protegida). |
 | **Inventario** | /inventario | Listado de productos, alerta de stock crítico, modales para crear y editar. |
 | **Historial de inventario** | /historial-inventario | Movimientos de stock con filtros. |
+| **Historial de ventas** | /historial-ventas | Ventas por rango de fechas y vendedor, con el detalle de productos de cada venta. |
 | **Punto de venta** | /pos | Buscador, carrito, cobro y recibo. |
 | **Categorías** | /categorias | Gestión de categorías. |
 | **Proveedores** | /proveedores | Gestión de proveedores. |
@@ -396,7 +400,34 @@ El backend expone una API REST documentada en docs/contrato-api.md. La siguiente
 
 ![Dashboard con métricas y gráfico de ventas](img/dashboard.jpeg)
 
-### 8.4. Gestión Colaborativa con Jira y GitHub
+**Inicio de sesión con el logo de Nova Salud (PS2I-69).**
+
+![Inicio de sesión con el logo de Nova Salud](img/login-logo.png)
+
+**Versiones del logo: portada del login y menú lateral.**
+
+![Versiones del logo: portada del login y menú lateral](img/logo-versiones.png)
+
+### 8.4. Módulo de Historial de ventas
+
+**Propósito.** El módulo permite consultar las ventas ya registradas, filtrarlas por fecha y por vendedor y ver qué productos incluyó cada una. Las ventas se crean en el Punto de venta (/pos); este módulo solo las muestra y no las modifica. Se abre desde la opción Historial de ventas del menú lateral (/historial-ventas) y, al entrar, muestra las ventas del día. El backend con los filtros se integró con la tarea PS2I-38 (pull request #83) y la pantalla con la tarea PS2I-84 (pull request #84), ambos fusionados en develop el 3 de noviembre de 2026.
+
+**Cómo se usa.** La pantalla tiene tres partes: los filtros arriba, la lista de ventas a la izquierda y el detalle de la venta elegida a la derecha (en pantallas angostas el detalle queda debajo). Los campos Desde y Hasta inician con la fecha de hoy y Vendedor es una lista desplegable con «Todos los vendedores» y los vendedores del resultado actual. Filtrar pide las ventas del rango y del vendedor elegidos; Limpiar vuelve a la fecha de hoy, quita el vendedor y cierra el detalle. Cada fila muestra el número de venta, el vendedor, la fecha y hora y el total en soles, de la más reciente a la más antigua; al pulsar una venta se muestran sus productos con la cantidad, el subtotal (precio unitario × cantidad) y el total.
+
+**API que usa.** El módulo usa dos rutas de solo lectura definidas en backend/src/routes/ventasRoutes.js, con la lógica en ventasController.js:
+
+| **Ruta** | **Parámetros** | **Respuesta correcta** | **Errores** |
+|----|----|----|----|
+| `GET /api/ventas` | `desde` y `hasta` (YYYY-MM-DD, ambos días incluidos) y `vendedor` (coincidencia parcial del nombre); todos opcionales | 200: arreglo de ventas con id, fecha, total, usuario_id y vendedor, de la más reciente a la más antigua | 400 si una fecha no tiene el formato YYYY-MM-DD; 500 si falla la base de datos |
+| `GET /api/ventas/:id` | `id` de la venta (entero mayor a cero) | 200: venta con id, fecha, total, usuario_id y detalle (nombre, cantidad y precio_unitario) | 400 si el id no es válido; 404 «Venta no encontrada»; 500 si falla la base de datos |
+
+**Estructura del frontend.** Todo el módulo está en frontend/src/pages/HistorialVentas.jsx; la ruta se declara en App.jsx y el enlace del menú en Layout.jsx. El componente guarda en estados (useState) la lista de ventas, la venta elegida, las fechas, el vendedor, las opciones del desplegable y el mensaje de error. Las funciones principales son fechaHoy(), que obtiene la fecha local en formato YYYY-MM-DD para que no cambie de día por la zona horaria; cargar(filtros), que consulta GET /api/ventas; verDetalle(id), que consulta GET /api/ventas/:id; y limpiar(). Los campos tienen su etiqueta asociada y el mensaje de error usa role="alert" para que los lectores de pantalla lo anuncien.
+
+**Manejo de errores.** Cuando algo falla, la pantalla muestra solo el aviso de error en rojo y los filtros, y oculta la lista y el detalle para no presentar datos viejos o incompletos. Si el backend está apagado, no hay red o el servidor responde con error, se muestra «No se pudo conectar con el servidor.»; si falla el detalle, «No se pudo cargar el detalle de la venta.». Si el rango no tiene ventas, la lista indica «No hay ventas en ese rango.». El aviso desaparece cuando una carga posterior sale bien, por lo que basta pulsar Filtrar o Limpiar con el servidor disponible.
+
+**Limitaciones conocidas.** Las rutas GET /api/ventas y GET /api/ventas/:id no piden token, igual que la mayoría de rutas del backend (solo /api/me y las de usuarios lo verifican). El filtro de vendedor busca por coincidencia parcial del nombre, por lo que dos usuarios con nombres parecidos se mezclan, y el desplegable solo ofrece los vendedores del rango consultado. No hay paginación: la lista completa del rango se carga en un cuadro con desplazamiento de 480 px. Si el usuario de una venta ya no existe, la venta aparece con el vendedor vacío, y no se pueden anular ni editar ventas desde esta pantalla.
+
+### 8.5. Gestión Colaborativa con Jira y GitHub
 
 El trabajo se organizó en Jira con el sprint «PS2I Sprint 1», que reúne 83 tareas (PS2I-1 a PS2I-83). Al 3 de noviembre de 2026 hay 64 finalizadas, 4 en curso y 15 por hacer. En GitHub se trabajó con ramas feature/PS2I-XX creadas desde develop y fusionadas mediante pull requests hacia develop, usando la clave de Jira en el nombre de la rama y en el título del pull request.
 
@@ -415,6 +446,8 @@ Los commits se contaron sin incluir los merges; un commit se cuenta en backend o
 | **PS2I-1 Setup inicial** | Cristhian Pineda | feature/PS21-1 | \#2 | Fusionado |
 | **PS2I-37 Registrar venta** | Cristhian Pineda | feature/PS2I-37 | \#30 | Fusionado |
 | **PS2I-54 Gráfico de ventas** | Cristhian Pineda | feature/PS2I-54b | \#55 | Fusionado |
+| **PS2I-38 Historial de ventas (API)** | Cristhian Pineda | feature/PS2I-38-historial | \#83 | Fusionado |
+| **PS2I-84 Historial de ventas (pantalla)** | Cristhian Pineda y James Martel | feature/PS2I-84-historial-front | \#84 | Fusionado |
 | **PS2I-13 verifyToken y /api/me** | Jeff Gil | feature/PS2I-13 | \#20 | Fusionado |
 | **PS2I-50 Dashboard métricas** | Jeff Gil | feature/PS2I-50 | \#42 | Fusionado |
 | **PS2I-61 Dockerfile backend** | Jeff Gil | feature/PS2I-61 | \#62 | Fusionado |
@@ -422,6 +455,7 @@ Los commits se contaron sin incluir los merges; un commit se cuenta en backend o
 | **PS2I-6 Inicializar frontend** | James Martel | feature/PS2I-6 | \#8 | Fusionado |
 | **PS2I-41 Vista del POS** | James Martel | feature/PS2I-41 | \#48 | Fusionado |
 | **PS2I-42 Cobrar desde el POS** | James Martel | feature/PS2I-42 | \#49 | Fusionado |
+| **PS2I-69 Logo e identidad visual** | James Martel | feature/PS2I-69 | \#82 | Fusionado |
 | **PS2I-4 Inicializar backend** | Jhonatan Najarro | feature/PS2I-4 | \#7 | Fusionado |
 | **PS2I-32 Proveedores** | Jhonatan Najarro | feature/PS2I-32 | \#33 | Fusionado |
 | **PS2I-71 Diagrama ER** | Jhonatan Najarro | feature/PS2I-71 | \#63 | Fusionado |
@@ -433,13 +467,27 @@ Los commits se contaron sin incluir los merges; un commit se cuenta en backend o
 
 Las evidencias de ramas, pull requests y del sprint en Jira se presentan en la sección 6.3.
 
-### 8.5. Pruebas y validación
+### 8.6. Pruebas y validación
 
 **Qué se probó.** Se hicieron pruebas funcionales por endpoint con Postman, pruebas de interfaz recorriendo cada pantalla del sistema (login, dashboard, inventario, punto de venta y alertas) y pruebas de caja negra intentando forzar errores (T48).
 
 **Con qué.** Se usaron las colecciones Postman del repositorio: postman/productos.postman_collection.json, con 11 casos sobre GET, POST, PUT y DELETE que esperan respuestas 200, 201, 400 y 404, y los casos de autenticación en backend/Nova-Salud Auth Tests (registro 201 y 400, login 200 y 401). Los reportes de caja negra y de rol vendedor están en documentacion/.
 
 **Resultados.** Los casos válidos respondieron 200 OK, por ejemplo el listado de productos. Los inválidos fueron rechazados sin modificar datos: una venta que pide 110 unidades con 109 en stock devuelve 400 «Stock insuficiente de Paracetamol 500mg», y una venta sin productos devuelve 400 «usuario_id y productos son requeridos». Como la venta se procesa en una transacción, un rechazo no descuenta stock. La colección incluye borrar un producto con ventas, que el backend responde con 400 porque la clave foránea de detalle_venta impide el borrado. En caja negra, los 4 casos fueron funcionales (login vacío, cobro sin sesión, carrito vacío y URL inexistente), y en el recorrido de la interfaz la venta se registró y el stock bajó en una unidad.
+
+**Historial de ventas.** El módulo se probó el 3 de noviembre de 2026 al revisar y corregir la pantalla. Las pruebas 1 a 4 se hicieron con el backend real; las marcadas con * se repitieron con un backend simulado que se enciende y apaga a voluntad, y falta confirmarlas con el backend real. La prueba 9 se hizo con respuestas simuladas.
+
+| **Prueba** | **Resultado esperado** | **Resultado obtenido** |
+|----|----|----|
+| **1. Abrir /historial-ventas con el backend encendido** | Lista con las ventas de hoy y el mensaje «Elige una venta de la lista para ver el detalle.» | Correcto |
+| **2. Pulsar una venta de la lista** | El panel derecho muestra los productos, los subtotales y el total | Correcto |
+| **3. Filtrar con otro rango de fechas y un vendedor** | La lista cambia según los filtros y el desplegable conserva todas las opciones | Correcto |
+| **4. Pulsar Limpiar** | Fechas de hoy, sin vendedor, detalle cerrado y lista de hoy | Correcto |
+| **5\*. Apagar el backend y recargar la página** | Solo el aviso «No se pudo conectar con el servidor.» y los filtros | Correcto (antes seguía saliendo el panel de detalle) |
+| **6\*. Elegir una venta, apagar el backend y pulsar otra** | Solo el aviso «No se pudo cargar el detalle de la venta.» | Correcto (antes no se mostraba ningún aviso) |
+| **7\*. Con el backend apagado, pulsar Filtrar** | Aviso de error, sin lista | Correcto (antes la lista seguía visible) |
+| **8\*. Encender el backend y pulsar Filtrar o Limpiar** | El aviso desaparece y la lista vuelve | Correcto |
+| **9. Respuesta 404 o 500 al pedir la lista** | Aviso de error, sin pantalla en blanco | Correcto (antes la pantalla quedaba en blanco) |
 
 **Limitaciones.** No se probó la carga con varios usuarios a la vez, el funcionamiento en navegadores distintos ni en dispositivos móviles reales. Las pruebas se ejecutaron en entorno local contra la base de datos de Aiven.
 
@@ -457,7 +505,7 @@ Las evidencias de ramas, pull requests y del sprint en Jira se presentan en la s
 
 ## 9. Conclusiones
 
-- Se implementó un sistema web full stack que reemplaza el registro manual de ventas e inventario de la botica Nova Salud por un flujo digital: inicio de sesión, gestión de productos, categorías y proveedores, punto de venta, historial de movimientos, alertas y dashboard.
+- Se implementó un sistema web full stack que reemplaza el registro manual de ventas e inventario de la botica Nova Salud por un flujo digital: inicio de sesión, gestión de productos, categorías y proveedores, punto de venta, historial de movimientos y de ventas, alertas y dashboard.
 
 - La separación en frontend (React), backend (Node.js con Express) y base de datos (MySQL en Aiven) permitió que cada integrante trabajara en una capa con contratos claros, definidos en docs/contrato-api.md.
 
@@ -476,6 +524,8 @@ Las siguientes recomendaciones están orientadas a la evolución del sistema en 
 - **Lector de código de barras:** permitir buscar y agregar productos al carrito con un lector de código de barras para agilizar la atención en caja.
 - **Reportes exportables:** generar reportes de ventas, inventario y movimientos por rango de fechas, con exportación a PDF y Excel.
 - **Notificaciones:** enviar avisos por correo o mensajería al administrador cuando un producto llegue al stock mínimo.
+- **Seguridad de la API:** exigir el token JWT en todas las rutas del backend, incluidas las de ventas, que hoy pueden consultarse sin iniciar sesión.
+- **Historial de ventas:** agregar paginación, filtrar por el id del vendedor en lugar del nombre y permitir anular ventas dejando registrado el motivo.
 - **Pruebas automatizadas e integración continua:** incorporar pruebas con Jest y Supertest y ejecutarlas con GitHub Actions en cada pull request.
 - **Despliegue en la nube:** publicar el frontend y el backend en un servicio en la nube a partir de las imágenes Docker, para acceder al sistema desde cualquier equipo.
 - **Diseño adaptable y varias sedes:** adaptar la interfaz a tablets y celulares y preparar el sistema para manejar el inventario de más de un local.
