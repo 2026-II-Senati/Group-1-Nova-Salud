@@ -47,6 +47,8 @@ const Inventario = () => {
   const [proveedores, setProveedores] = useState([]);
   const [modalAbierto, setModalAbierto] = useState(false);
   const [productoEditando, setProductoEditando] = useState(null);
+  const [errorEliminar, setErrorEliminar] = useState("");
+  const [eliminandoId, setEliminandoId] = useState(null);
 
   const cargarDatos = () =>
     Promise.all([
@@ -87,6 +89,31 @@ const Inventario = () => {
   const abrirEditar = (prod) => {
     setProductoEditando(prod);
     setModalAbierto(true);
+  };
+
+  const eliminar = async (prod) => {
+    if (!window.confirm(`¿Eliminar el producto "${prod.nombre}"?`)) return;
+
+    setEliminandoId(prod.id);
+    setErrorEliminar("");
+    try {
+      const res = await fetch(`http://localhost:3000/api/productos/${prod.id}`, {
+        method: "DELETE",
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.message || "No se pudo eliminar el producto.");
+      }
+      setProductos((prev) => prev.filter((p) => p.id !== prod.id));
+    } catch (err) {
+      setErrorEliminar(
+        err instanceof TypeError
+          ? "No se pudo conectar con el servidor."
+          : err.message,
+      );
+    } finally {
+      setEliminandoId(null);
+    }
   };
 
   const nombreCategoria = (id) =>
@@ -130,6 +157,12 @@ const Inventario = () => {
         </button>
       </div>
 
+      {errorEliminar && (
+        <p role="alert" className="mensaje-error mb-4">
+          {errorEliminar}
+        </p>
+      )}
+
       <div className="tabla-contenedor">
         <table className="tabla min-w-[640px]">
           <thead>
@@ -159,7 +192,7 @@ const Inventario = () => {
                       minimo={prod.stock_minimo}
                     />
                   </td>
-                  <td className="text-right">
+                  <td className="text-right space-x-2">
                     <button
                       type="button"
                       onClick={() => abrirEditar(prod)}
@@ -167,6 +200,15 @@ const Inventario = () => {
                       className="btn btn-chico btn-secundario"
                     >
                       Editar
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => eliminar(prod)}
+                      disabled={eliminandoId === prod.id}
+                      aria-label={`Eliminar ${prod.nombre}`}
+                      className="btn btn-chico btn-peligro"
+                    >
+                      Eliminar
                     </button>
                   </td>
                 </tr>
