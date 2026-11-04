@@ -1,5 +1,6 @@
 const db = require('../db');
 const { responderError, traducirErrorBase, asyncHandler } = require('../utils/errors');
+const { hoyLima } = require('../utils/fecha');
 
 const fmt = (d) => {
   const anio = d.getFullYear();
@@ -11,7 +12,8 @@ const fmt = (d) => {
 const metricas = asyncHandler(async (req, res) => {
   try {
     const [[ventas]] = await db.query(
-      'SELECT COUNT(*) AS total FROM ventas WHERE DATE(fecha) = CURDATE()'
+      'SELECT COUNT(*) AS total FROM ventas WHERE DATE(fecha) = ?',
+      [hoyLima()]
     );
     const [[productos]] = await db.query(
       'SELECT COUNT(*) AS total FROM productos'
