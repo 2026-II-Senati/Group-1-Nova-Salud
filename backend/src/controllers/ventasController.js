@@ -104,9 +104,11 @@ const registrar = asyncHandler(async (req, res) => {
 
     total = Math.round(total * 100) / 100;
 
+    const ahora = ahoraLima();
+
     const [venta] = await conexion.query(
       'INSERT INTO ventas (fecha, total, usuario_id) VALUES (?, ?, ?)',
-      [ahoraLima(), total, usuarioIdNum]
+      [ahora, total, usuarioIdNum]
     );
 
     for (const d of detalle) {
@@ -121,8 +123,8 @@ const registrar = asyncHandler(async (req, res) => {
       );
 
       await conexion.query(
-        "INSERT INTO movimientos (producto_id, tipo, cantidad) VALUES (?, 'salida', ?)",
-        [d.producto_id, d.cantidad]
+        "INSERT INTO movimientos (producto_id, tipo, cantidad, fecha) VALUES (?, 'salida', ?, ?)",
+        [d.producto_id, d.cantidad, ahora]
       );
     }
 
@@ -254,37 +256,5 @@ const hoy = asyncHandler(async (req, res) => {
     return responderError(res, 500, 'Error interno del servidor');
   }
 });
-const ventasSemana = asyncHandler(async (req, res) => {
-  try {
-    const [rows] = await db.query(
-      `SELECT DATE_FORMAT(fecha, '%Y-%m-%d') AS dia, SUM(total) AS total
-       FROM ventas
-       WHERE DATE(fecha) >= ? - INTERVAL 6 DAY
-       GROUP BY DATE_FORMAT(fecha, '%Y-%m-%d')`,
-      [hoyLima()]
-    );
 
-    const porDia = {};
-    for (const row of rows) {
-      porDia[row.dia] = Number(row.total);
-    }
-
-    const semana = [];
-    for (let i = 6; i >= 0; i--) {
-      const clave = restarDias(hoyLima(), i);
-      semana.push({ fecha: clave, total: porDia[clave] || 0 });
-    }
-
-    res.json(semana);
-  } catch (error) {
-    const traducido = traducirErrorBase(error);
-    if (traducido) {
-      return responderError(res, traducido.status, traducido.message);
-    }
-    console.error('Error en GET /api/dashboard/ventas-semana:', error);
-    return responderError(res, 500, 'Error interno del servidor');
-  }
-});
-
-
-module.exports = { registrar, listar, detalle, hoy, ventasSemana };
+module.exports = { registrar, listar, detalle, hoy };
