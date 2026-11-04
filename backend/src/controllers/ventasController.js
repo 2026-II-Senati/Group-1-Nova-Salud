@@ -1,5 +1,7 @@
 const db = require('../db');
 const { responderError, traducirErrorBase, asyncHandler } = require('../utils/errors');
+const { hoyLima, restarDias, ahoraLima } = require('../utils/fecha');
+
 
 const idValido = (valor) => {
   const n = Number(valor);
@@ -102,9 +104,11 @@ const registrar = asyncHandler(async (req, res) => {
 
     total = Math.round(total * 100) / 100;
 
+    const ahora = ahoraLima();
+
     const [venta] = await conexion.query(
-      'INSERT INTO ventas (total, usuario_id) VALUES (?, ?)',
-      [total, usuarioIdNum]
+      'INSERT INTO ventas (fecha, total, usuario_id) VALUES (?, ?, ?)',
+      [ahora, total, usuarioIdNum]
     );
 
     for (const d of detalle) {
@@ -119,8 +123,8 @@ const registrar = asyncHandler(async (req, res) => {
       );
 
       await conexion.query(
-        "INSERT INTO movimientos (producto_id, tipo, cantidad) VALUES (?, 'salida', ?)",
-        [d.producto_id, d.cantidad]
+        "INSERT INTO movimientos (producto_id, tipo, cantidad, fecha) VALUES (?, 'salida', ?, ?)",
+        [d.producto_id, d.cantidad, ahora]
       );
     }
 
@@ -238,8 +242,9 @@ const hoy = asyncHandler(async (req, res) => {
     const [rows] = await db.query(
       `SELECT id, fecha, total, usuario_id
        FROM ventas
-       WHERE DATE(fecha) = CURDATE()
-       ORDER BY fecha DESC`
+       WHERE DATE(fecha) = ?
+       ORDER BY fecha DESC`,
+      [hoyLima()]
     );
     res.json(rows);
   } catch (error) {

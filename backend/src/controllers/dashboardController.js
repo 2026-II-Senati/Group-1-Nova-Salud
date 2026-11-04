@@ -1,5 +1,6 @@
 const db = require('../db');
 const { responderError, traducirErrorBase, asyncHandler } = require('../utils/errors');
+const { hoyLima, restarDias } = require('../utils/fecha');
 
 const fmt = (d) => {
   const anio = d.getFullYear();
@@ -11,7 +12,8 @@ const fmt = (d) => {
 const metricas = asyncHandler(async (req, res) => {
   try {
     const [[ventas]] = await db.query(
-      'SELECT COUNT(*) AS total FROM ventas WHERE DATE(fecha) = CURDATE()'
+      'SELECT COUNT(*) AS total FROM ventas WHERE DATE(fecha) = ?',
+      [hoyLima()]
     );
     const [[productos]] = await db.query(
       'SELECT COUNT(*) AS total FROM productos'
@@ -38,27 +40,21 @@ const metricas = asyncHandler(async (req, res) => {
 const ventasSemana = asyncHandler(async (req, res) => {
   try {
     const [rows] = await db.query(
-      `SELECT DATE(fecha) AS dia, SUM(total) AS total
+      `SELECT DATE_FORMAT(fecha, '%Y-%m-%d') AS dia, SUM(total) AS total
        FROM ventas
-       WHERE DATE(fecha) >= CURDATE() - INTERVAL 6 DAY
-       GROUP BY DATE(fecha)`
+       WHERE DATE(fecha) >= ?
+       GROUP BY DATE_FORMAT(fecha, '%Y-%m-%d')`,
+      [restarDias(hoyLima(), 6)]
     );
 
     const porDia = {};
     for (const row of rows) {
-      // DATE() del driver llega como Date en UTC medianoche; los totales se
-      // agrupan con SUM() de MySQL para que no dependa de la zona del proceso.
-      const dia = row.dia instanceof Date ? row.dia : new Date(row.dia);
-      const clave = dia.toISOString().slice(0, 10);
-      porDia[clave] = Number(row.total);
+      porDia[row.dia] = Number(row.total);
     }
 
-    const hoy = new Date();
     const semana = [];
-
     for (let i = 6; i >= 0; i--) {
-      const d = new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate() - i);
-      const clave = fmt(d);
+      const clave = restarDias(hoyLima(), i);
       semana.push({ fecha: clave, total: porDia[clave] || 0 });
     }
 
@@ -72,5 +68,6 @@ const ventasSemana = asyncHandler(async (req, res) => {
     return responderError(res, 500, 'Error interno del servidor');
   }
 });
+
 
 module.exports = { metricas, ventasSemana };
