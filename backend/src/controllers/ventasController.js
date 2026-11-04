@@ -1,5 +1,7 @@
 const db = require('../db');
 const { responderError, traducirErrorBase, asyncHandler } = require('../utils/errors');
+const { hoyLima, restarDias, ahoraLima } = require('../utils/fecha');
+
 
 const idValido = (valor) => {
   const n = Number(valor);
@@ -103,8 +105,8 @@ const registrar = asyncHandler(async (req, res) => {
     total = Math.round(total * 100) / 100;
 
     const [venta] = await conexion.query(
-      'INSERT INTO ventas (total, usuario_id) VALUES (?, ?)',
-      [total, usuarioIdNum]
+      'INSERT INTO ventas (fecha, total, usuario_id) VALUES (?, ?, ?)',
+      [ahoraLima(), total, usuarioIdNum]
     );
 
     for (const d of detalle) {
@@ -238,8 +240,9 @@ const hoy = asyncHandler(async (req, res) => {
     const [rows] = await db.query(
       `SELECT id, fecha, total, usuario_id
        FROM ventas
-       WHERE DATE(fecha) = CURDATE()
-       ORDER BY fecha DESC`
+       WHERE DATE(fecha) = ?
+       ORDER BY fecha DESC`,
+      [hoyLima()]
     );
     res.json(rows);
   } catch (error) {
@@ -251,5 +254,37 @@ const hoy = asyncHandler(async (req, res) => {
     return responderError(res, 500, 'Error interno del servidor');
   }
 });
+const ventasSemana = asyncHandler(async (req, res) => {
+  try {
+    const [rows] = await db.query(
+      `SELECT DATE_FORMAT(fecha, '%Y-%m-%d') AS dia, SUM(total) AS total
+       FROM ventas
+       WHERE DATE(fecha) >= ? - INTERVAL 6 DAY
+       GROUP BY DATE_FORMAT(fecha, '%Y-%m-%d')`,
+      [hoyLima()]
+    );
 
-module.exports = { registrar, listar, detalle, hoy };
+    const porDia = {};
+    for (const row of rows) {
+      porDia[row.dia] = Number(row.total);
+    }
+
+    const semana = [];
+    for (let i = 6; i >= 0; i--) {
+      const clave = restarDias(hoyLima(), i);
+      semana.push({ fecha: clave, total: porDia[clave] || 0 });
+    }
+
+    res.json(semana);
+  } catch (error) {
+    const traducido = traducirErrorBase(error);
+    if (traducido) {
+      return responderError(res, traducido.status, traducido.message);
+    }
+    console.error('Error en GET /api/dashboard/ventas-semana:', error);
+    return responderError(res, 500, 'Error interno del servidor');
+  }
+});
+
+
+module.exports = { registrar, listar, detalle, hoy, ventasSemana };
