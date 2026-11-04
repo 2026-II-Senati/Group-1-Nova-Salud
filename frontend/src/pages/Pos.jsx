@@ -72,16 +72,25 @@ const Pos = () => {
   };
 
   const agregar = (prod) => {
+    const stock = Number(prod.stock);
     setCarrito((prev) => {
       const existe = prev.find((i) => i.id === prod.id);
       if (existe) {
+        if (existe.cantidad >= stock) return prev;
         return prev.map((i) =>
           i.id === prod.id ? { ...i, cantidad: i.cantidad + 1 } : i,
         );
       }
+      if (stock < 1) return prev;
       return [
         ...prev,
-        { id: prod.id, nombre: prod.nombre, precio: prod.precio, cantidad: 1 },
+        {
+          id: prod.id,
+          nombre: prod.nombre,
+          precio: prod.precio,
+          cantidad: 1,
+          stock,
+        },
       ];
     });
   };
@@ -89,7 +98,12 @@ const Pos = () => {
   const cambiarCantidad = (id, delta) => {
     setCarrito((prev) =>
       prev.map((i) =>
-        i.id === id ? { ...i, cantidad: Math.max(1, i.cantidad + delta) } : i,
+        i.id === id
+          ? {
+              ...i,
+              cantidad: Math.min(i.stock, Math.max(1, i.cantidad + delta)),
+            }
+          : i,
       ),
     );
   };
@@ -246,6 +260,8 @@ const Pos = () => {
                 const enCarrito = carrito.find(
                   (i) => i.id === prod.id,
                 )?.cantidad;
+                const sinStock = Number(prod.stock) < 1;
+                const enTope = (enCarrito || 0) >= Number(prod.stock);
                 return (
                   <li
                     key={prod.id}
@@ -280,10 +296,11 @@ const Pos = () => {
                       <button
                         type="button"
                         onClick={() => agregar(prod)}
+                        disabled={enTope}
                         aria-label={`Agregar ${prod.nombre}`}
                         className="btn btn-chico btn-secundario"
                       >
-                        Agregar
+                        {sinStock ? "Sin stock" : enTope ? "Máximo" : "Agregar"}
                       </button>
                     </div>
                   </li>
@@ -336,6 +353,7 @@ const Pos = () => {
                       <button
                         type="button"
                         onClick={() => cambiarCantidad(item.id, 1)}
+                        disabled={item.cantidad >= item.stock}
                         aria-label={`Agregar una unidad de ${item.nombre}`}
                         className="btn btn-chico btn-secundario w-9"
                       >
