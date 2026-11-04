@@ -1,0 +1,254 @@
+import { useState } from "react";
+
+const FORMULARIO_VACIO = {
+  nombre: "",
+  precio: "",
+  stock: "",
+  stock_minimo: "",
+  categoria_id: "",
+  proveedor_id: "",
+};
+
+const CAMPOS = [
+  { name: "nombre", label: "Nombre", type: "text" },
+  { name: "precio", label: "Precio (S/)", type: "number", step: "0.01" },
+  { name: "stock", label: "Stock", type: "number" },
+  { name: "stock_minimo", label: "Stock mínimo", type: "number" },
+];
+
+const formDesdeProducto = (p) =>
+  p
+    ? {
+        nombre: p.nombre ?? "",
+        precio: String(p.precio ?? ""),
+        stock: String(p.stock ?? ""),
+        stock_minimo: String(p.stock_minimo ?? ""),
+        categoria_id: p.categoria_id ? String(p.categoria_id) : "",
+        proveedor_id: p.proveedor_id ? String(p.proveedor_id) : "",
+      }
+    : FORMULARIO_VACIO;
+
+const claseCampo = (hayError) => `campo ${hayError ? "campo-error" : ""}`;
+
+const NOMBRE_MAXIMO = 100;
+const PRECIO_MAXIMO = 99999999.99;
+const ENTERO_MAXIMO = 2147483647;
+
+const tieneMaximoDosDecimales = (valor) => /^\d+(\.\d{1,2})?$/.test(valor);
+
+const esEnteroValido = (valor) =>
+  valor !== "" &&
+  Number.isInteger(Number(valor)) &&
+  Number(valor) >= 0 &&
+  Number(valor) <= ENTERO_MAXIMO;
+
+const validar = (form) => {
+  const errores = {};
+  const nombre = form.nombre.trim();
+  if (!nombre) errores.nombre = "El nombre es obligatorio.";
+  else if (nombre.length > NOMBRE_MAXIMO)
+    errores.nombre = `El nombre no puede pasar de ${NOMBRE_MAXIMO} caracteres.`;
+
+  if (form.precio === "" || Number(form.precio) < 0.01)
+    errores.precio = "Ingresa un precio de al menos 0.01.";
+  else if (Number(form.precio) > PRECIO_MAXIMO)
+    errores.precio = "El precio no puede pasar de 99,999,999.99.";
+  else if (!tieneMaximoDosDecimales(form.precio))
+    errores.precio = "El precio puede tener como máximo 2 decimales.";
+
+  if (!esEnteroValido(form.stock))
+    errores.stock = "Ingresa un stock entero entre 0 y 2,147,483,647.";
+  if (!esEnteroValido(form.stock_minimo))
+    errores.stock_minimo =
+      "Ingresa un stock mínimo entero entre 0 y 2,147,483,647.";
+  if (!form.categoria_id) errores.categoria_id = "Selecciona una categoría.";
+  if (!form.proveedor_id) errores.proveedor_id = "Selecciona un proveedor.";
+  return errores;
+};
+
+function MensajeError({ id, texto }) {
+  if (!texto) return null;
+  return (
+    <p id={id} role="alert" className="texto-error">
+      {texto}
+    </p>
+  );
+}
+
+function ModalProducto({
+  producto,
+  categorias,
+  proveedores,
+  onCerrar,
+  onGuardado,
+}) {
+  const editando = Boolean(producto);
+  const [form, setForm] = useState(() => formDesdeProducto(producto));
+  const [errores, setErrores] = useState({});
+  const [enviando, setEnviando] = useState(false);
+  const [errorServidor, setErrorServidor] = useState("");
+
+  const cambiar = (e) => {
+    setForm({ ...form, [e.target.name]: e.target.value });
+    setErrores({ ...errores, [e.target.name]: undefined });
+  };
+
+  const guardar = async (e) => {
+    e.preventDefault();
+    const nuevos = validar(form);
+    setErrores(nuevos);
+    if (Object.keys(nuevos).length > 0) return;
+
+    setEnviando(true);
+    setErrorServidor("");
+    try {
+      const url = editando
+        ? `http://localhost:3000/api/productos/${producto.id}`
+        : "http://localhost:3000/api/productos";
+      const res = await fetch(url, {
+        method: editando ? "PUT" : "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          nombre: form.nombre.trim(),
+          precio: Number(form.precio),
+          stock: Number(form.stock),
+          stock_minimo: Number(form.stock_minimo),
+          categoria_id: Number(form.categoria_id),
+          proveedor_id: Number(form.proveedor_id),
+        }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        throw new Error(data.message || "No se pudo guardar el producto.");
+      }
+      await onGuardado();
+      onCerrar();
+    } catch (err) {
+      setErrorServidor(
+        err instanceof TypeError
+          ? "No se pudo conectar con el servidor."
+          : err.message,
+      );
+    } finally {
+      setEnviando(false);
+    }
+  };
+
+  return (
+    <div
+      className="fixed inset-0 z-20 flex items-center justify-center bg-tinta/50 p-4"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="titulo-modal"
+    >
+      <form
+        onSubmit={guardar}
+        noValidate
+        className="w-full max-w-md rounded-xl bg-white p-6 shadow-xl"
+      >
+        <h2 id="titulo-modal" className="mb-4 text-xl font-bold">
+          {editando ? "Editar producto" : "Nuevo producto"}
+        </h2>
+
+        <div className="flex flex-col gap-4">
+          {CAMPOS.map((c) => (
+            <div key={c.name} className="flex flex-col gap-1">
+              <label htmlFor={c.name} className="etiqueta">
+                {c.label}
+              </label>
+              <input
+                id={c.name}
+                name={c.name}
+                type={c.type}
+                step={c.step}
+                value={form[c.name]}
+                onChange={cambiar}
+                aria-invalid={Boolean(errores[c.name])}
+                aria-describedby={`${c.name}-error`}
+                className={claseCampo(errores[c.name])}
+              />
+              <MensajeError id={`${c.name}-error`} texto={errores[c.name]} />
+            </div>
+          ))}
+
+          <div className="flex flex-col gap-1">
+            <label htmlFor="categoria_id" className="etiqueta">
+              Categoría
+            </label>
+            <select
+              id="categoria_id"
+              name="categoria_id"
+              value={form.categoria_id}
+              onChange={cambiar}
+              aria-invalid={Boolean(errores.categoria_id)}
+              aria-describedby="categoria_id-error"
+              className={claseCampo(errores.categoria_id)}
+            >
+              <option value="">Selecciona una categoría</option>
+              {categorias.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.nombre}
+                </option>
+              ))}
+            </select>
+            <MensajeError
+              id="categoria_id-error"
+              texto={errores.categoria_id}
+            />
+          </div>
+
+          <div className="flex flex-col gap-1">
+            <label htmlFor="proveedor_id" className="etiqueta">
+              Proveedor
+            </label>
+            <select
+              id="proveedor_id"
+              name="proveedor_id"
+              value={form.proveedor_id}
+              onChange={cambiar}
+              aria-invalid={Boolean(errores.proveedor_id)}
+              aria-describedby="proveedor_id-error"
+              className={claseCampo(errores.proveedor_id)}
+            >
+              <option value="">Selecciona un proveedor</option>
+              {proveedores.map((p) => (
+                <option key={p.id} value={p.id}>
+                  {p.nombre}
+                </option>
+              ))}
+            </select>
+            <MensajeError
+              id="proveedor_id-error"
+              texto={errores.proveedor_id}
+            />
+          </div>
+        </div>
+
+        {errorServidor && (
+          <p role="alert" className="mensaje-error mt-4">
+            {errorServidor}
+          </p>
+        )}
+
+        <div className="mt-6 flex justify-end gap-3">
+          <button
+            type="button"
+            onClick={onCerrar}
+            className="btn btn-secundario"
+          >
+            Cancelar
+          </button>
+          <button
+            type="submit"
+            disabled={enviando}
+            className="btn btn-primario"
+          >
+            {enviando ? "Guardando..." : "Guardar"}
+          </button>
+        </div>
+      </form>
+    </div>
+  );
+}
+
+export default ModalProducto;

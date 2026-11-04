@@ -1,0 +1,13 @@
+$kind: http-request
+url: http://localhost:3000/api/auth/login
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: text
+  content: |-
+    {
+      "email": "prueba_postman_2@novasalud.com",
+      "password": "Password123!"
+    }
+order: 3000

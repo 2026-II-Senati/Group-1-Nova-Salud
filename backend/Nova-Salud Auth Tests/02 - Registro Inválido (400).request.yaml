@@ -1,0 +1,13 @@
+$kind: http-request
+url: http://localhost:3000/api/auth/register
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: text
+  content: |-
+    {
+      "nombre": "Cesar Prueba",
+      "email": "prueba_postman_2@novasalud.com"
+    }
+order: 2000
