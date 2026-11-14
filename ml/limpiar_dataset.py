@@ -1,63 +1,52 @@
 import pandas as pd
 import os
 
-# 1. Definir rutas de archivos
-# Asumimos que los archivos del ZIP se llaman así. ¡Cámbialos si se llaman distinto!
-RUTA_VENTAS = 'data/raw/FactSales.csv' 
-RUTA_PRODUCTOS = 'data/raw/DimProduct.csv'
-RUTA_SALIDA = 'data/processed/dataset_nova_salud.csv'
+# 1. RUTAS
+# Pon aquí el nombre exacto de tu archivo Excel (asegúrate de que esté en data/raw/)
+RUTA_EXCEL = 'C:\\Users\\Edward\\Documents\\Clone\\Group-1-Nova-Salud\\ml\\data\\raw\\Pharmacy_data.xlsx' 
+RUTA_SALIDA = 'C:\\Users\\Edward\\Documents\\Clone\\Group-1-Nova-Salud\\ml\\data\\processed\\dataset_nova_salud.csv'
 
 print("Iniciando limpieza de datos...")
 
-# 2. Cargar los datos
-try:
-    ventas = pd.read_csv(RUTA_VENTAS)
-    productos = pd.read_csv(RUTA_PRODUCTOS)
-    print("Datos cargados correctamente.")
-except FileNotFoundError:
-    print("Error: No se encontraron los archivos. Revisa las rutas en el script.")
-    exit()
+# 2. CARGAR DATOS DE LAS PESTAÑAS
+ventas = pd.read_excel(RUTA_EXCEL, sheet_name='FactSales')
+productos = pd.read_excel(RUTA_EXCEL, sheet_name='DimProduct')
 
-# 3. Unir ventas con productos (JOIN) usando el ID del producto
-# Aquí unimos la tabla de ventas con la de productos para saber qué se vendió
+# 3. UNIR TABLAS
+# Usamos 'ProductID' porque es el nombre de la columna en FactSales
 df = pd.merge(ventas, productos, on='ProductID', how='left')
 
-# 4. Limpieza y Transformación
-# Convertir la fecha a formato datetime
-df['Date'] = pd.to_datetime(df['Date'])
+# 4. LIMPIAR FECHA
+# DateKey viene como número (20240101), lo convertimos a texto y luego a fecha real
+df['DateKey'] = pd.to_datetime(df['DateKey'].astype(str), format='%Y%m%d')
 
-# Convertir de Euros a Soles (asumiendo un cambio de 4.0)
-TIPO_CAMBIO_EUR_A_PEN = 4.0
-df['Precio_PEN'] = df['Revenue'] * TIPO_CAMBIO_EUR_A_PEN
+# 5. LIMPIAR PRECIO
+# RevenueEUR tiene el símbolo € y comas. Quitamos el € y cambiamos coma por punto.
+# Usamos regex=False para que no se confunda con caracteres especiales.
+df['RevenueEUR'] = df['RevenueEUR'].astype(str).str.replace('€', '', regex=False).str.replace(',', '.', regex=False)
+df['RevenueEUR'] = pd.to_numeric(df['RevenueEUR'], errors='coerce') # Convierte a número
 
-# Renombrar columnas para que coincidan con lo que espera el modelo
+# 6. CONVERTIR A SOLES
+df['ventas_totales'] = df['RevenueEUR'] * 4.0
+
+# 7. RENOMBRAR
 df = df.rename(columns={
-    'Date': 'fecha',
-    'Units': 'cantidad',
-    'Precio_PEN': 'precio_unitario',
-    'Product': 'producto'
+    'DateKey': 'fecha',
+    'UnitsSold': 'cantidad'
 })
 
-# Eliminar columnas que no usaremos (para no ensuciar el dataset)
-columnas_a_mantener = ['fecha', 'cantidad', 'precio_unitario', 'producto']
-df = df[columnas_a_mantener]
+# 8. SELECCIONAR Y AGRUPAR
+df = df[['fecha', 'cantidad', 'ventas_totales']]
+df = df.dropna() # Quitar filas con valores vacíos
 
-# Eliminar nulos o cantidades en 0 (ventas inválidas)
-df = df.dropna()
-df = df[df['cantidad'] > 0]
-
-# 5. Agrupar por DÍA
-# El modelo de predicción necesita saber cuánto se vendió en total CADA DÍA, no transacción por transacción.
+# Sumar todas las ventas del día
 df_diario = df.groupby('fecha').agg({
     'cantidad': 'sum',
-    'precio_unitario': 'sum' # Sumamos todos los ingresos del día
+    'ventas_totales': 'sum' 
 }).reset_index()
 
-# Renombrar a "ventas_totales" para que sea más claro
-df_diario = df_diario.rename(columns={'precio_unitario': 'ventas_totales'})
-
-# 6. Guardar el CSV limpio
-os.makedirs('data/processed', exist_ok=True)
+# 9. GUARDAR
+os.makedirs('C:\\Users\\Edward\\Documents\\Clone\\Group-1-Nova-Salud\\ml\\data\\processed', exist_ok=True)
 df_diario.to_csv(RUTA_SALIDA, index=False)
 
 print(f"¡Limpieza terminada! Archivo guardado en: {RUTA_SALIDA}")
