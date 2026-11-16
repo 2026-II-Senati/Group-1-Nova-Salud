@@ -2,52 +2,59 @@ import pandas as pd
 import os
 
 # 1. RUTAS
-# Pon aquí el nombre exacto de tu archivo Excel (asegúrate de que esté en data/raw/)
-RUTA_EXCEL = 'C:\\Users\\Edward\\Documents\\Clone\\Group-1-Nova-Salud\\ml\\data\\raw\\Pharmacy_data.xlsx' 
-RUTA_SALIDA = 'C:\\Users\\Edward\\Documents\\Clone\\Group-1-Nova-Salud\\ml\\data\\processed\\dataset_nova_salud.csv'
+RUTA_CSV = 'C:\\Users\\User\\Group-1-Nova-Salud\\ml\\data\\raw\\rossmann.csv' 
+RUTA_SALIDA = 'C:\\Users\\User\\Group-1-Nova-Salud\\ml\\data\\processed\\dataset_nova_salud.csv'
 
-print("Iniciando limpieza de datos...")
+print("Iniciando limpieza de datos de Rossmann...")
 
-# 2. CARGAR DATOS DE LAS PESTAÑAS
-ventas = pd.read_excel(RUTA_EXCEL, sheet_name='FactSales')
-productos = pd.read_excel(RUTA_EXCEL, sheet_name='DimProduct')
+# 2. CARGAR DATOS
+# Usamos low_memory=False porque el archivo es grande (1 millón de filas)
+df = pd.read_csv(RUTA_CSV, low_memory=False)
 
-# 3. UNIR TABLAS
-# Usamos 'ProductID' porque es el nombre de la columna en FactSales
-df = pd.merge(ventas, productos, on='ProductID', how='left')
+# 3. LIMPIAR FILAS INVÁLIDAS
+# En Rossmann, las tiendas cerradas tienen Sales = 0. Esas filas no nos sirven para predecir.
+df = df[df['Open'] == 1]
+df = df[df['Sales'] > 0]
 
 # 4. LIMPIAR FECHA
-# DateKey viene como número (20240101), lo convertimos a texto y luego a fecha real
-df['DateKey'] = pd.to_datetime(df['DateKey'].astype(str), format='%Y%m%d')
+df['Date'] = pd.to_datetime(df['Date'])
 
-# 5. LIMPIAR PRECIO
-# RevenueEUR tiene el símbolo € y comas. Quitamos el € y cambiamos coma por punto.
-# Usamos regex=False para que no se confunda con caracteres especiales.
-df['RevenueEUR'] = df['RevenueEUR'].astype(str).str.replace('€', '', regex=False).str.replace(',', '.', regex=False)
-df['RevenueEUR'] = pd.to_numeric(df['RevenueEUR'], errors='coerce') # Convierte a número
-
-# 6. CONVERTIR A SOLES
-df['ventas_totales'] = df['RevenueEUR'] * 4.0
-
-# 7. RENOMBRAR
-df = df.rename(columns={
-    'DateKey': 'fecha',
-    'UnitsSold': 'cantidad'
-})
-
-# 8. SELECCIONAR Y AGRUPAR
-df = df[['fecha', 'cantidad', 'ventas_totales']]
-df = df.dropna() # Quitar filas con valores vacíos
-
-# Sumar todas las ventas del día
-df_diario = df.groupby('fecha').agg({
-    'cantidad': 'sum',
-    'ventas_totales': 'sum' 
+# 5. AGRUPAR POR DÍA (Sumando las ventas de TODAS las tiendas)
+# Como Nova Salud es una botica, sumaremos todas las tiendas para simular la "venta global diaria"
+df_diario = df.groupby('Date').agg({
+    'Sales': 'sum',
+    'Customers': 'sum',
+    'Promo': 'max',        # 1 si al menos una tienda tuvo promo
+    'SchoolHoliday': 'max' # 1 si fue feriado escolar
 }).reset_index()
 
-# 9. GUARDAR
-os.makedirs('C:\\Users\\Edward\\Documents\\Clone\\Group-1-Nova-Salud\\ml\\data\\processed', exist_ok=True)
-df_diario.to_csv(RUTA_SALIDA, index=False)
+df_diario = df_diario.rename(columns={
+    'Date': 'fecha',
+    'Sales': 'ventas_totales',
+    'Customers': 'clientes_totales'
+})
 
-print(f"¡Limpieza terminada! Archivo guardado en: {RUTA_SALIDA}")
-print(f"Total de días registrados: {len(df_diario)}")
+# =====================================================================
+# 6. CREACIÓN DE VARIABLES (FEATURES)
+# =====================================================================
+# Rezagos (Ventas de días anteriores)
+df_diario['ventas_ayer'] = df_diario['ventas_totales'].shift(1)
+df_diario['ventas_hace_7_dias'] = df_diario['ventas_totales'].shift(7)
+
+# Promedio de los últimos 7 días (para capturar tendencia)
+df_diario['promedio_7_dias'] = df_diario['ventas_totales'].shift(1).rolling(window=7).mean()
+
+# Variables de calendario
+df_diario['dia_semana'] = df_diario['fecha'].dt.dayofweek
+df_diario['mes'] = df_diario['fecha'].dt.month
+df_diario['dia_mes'] = df_diario['fecha'].dt.day
+
+# Eliminar los primeros 7 días (porque no tienen historia completa)
+df_diario = df_diario.dropna()
+
+# 7. GUARDAR
+os.makedirs('C:\\Users\\User\\Group-1-Nova-Salud\\ml\\data\\processed', exist_ok=True)
+df_diario.to_csv(RUTA_SALIDA, index=False, sep=';')
+
+print(f"¡Limpieza terminada! Total de días: {len(df_diario)}")
+print(f"Columnas finales: {df_diario.columns.tolist()}")
