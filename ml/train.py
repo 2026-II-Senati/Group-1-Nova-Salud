@@ -41,7 +41,7 @@ rmse_naive = np.sqrt(mean_squared_error(y_test, pred_naive))
 r2_naive = r2_score(y_test, pred_naive)
 
 # =====================================================================
-# MODELO 1: REGRESIÓN LINEAL 
+# MODELO 1: REGRESIÓN LINEAL
 # =====================================================================
 modelo_lineal = LinearRegression()
 modelo_lineal.fit(X_train, y_train)
