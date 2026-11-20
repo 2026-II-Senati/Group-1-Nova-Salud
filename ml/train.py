@@ -12,7 +12,7 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 RUTA_CSV = os.path.join(BASE_DIR, 'data', 'processed', 'dataset_nova_salud.csv')
 RUTA_MODELO = os.path.join(BASE_DIR, 'modelo.pkl')
 
-print("Iniciando entrenamiento HONESTO y evaluación temporal...")
+print("Iniciando entrenamiento y evaluación...")
 df = pd.read_csv(RUTA_CSV, sep=';')
 
 # 2. DEFINIR VARIABLES (ELIMINAMOS clientes_totales del día objetivo)
