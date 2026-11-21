@@ -12,6 +12,7 @@ import { HistorialInventario } from "./pages/HistorialInventario";
 import Layout from "./components/Layout";
 import Usuarios from "./pages/Usuarios";
 import RutaAdmin from "./components/RutaAdmin";
+import Predicciones from "./pages/Predicciones";
 
 function App() {
   return (
@@ -26,6 +27,7 @@ function App() {
           {/* Solo administradores */}
           <Route element={<RutaAdmin />}>
             <Route path="/usuarios" element={<Usuarios />} />
+            <Route path="/predicciones" element={<Predicciones />} />
           </Route>
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/inventario" element={<Inventario />} />
