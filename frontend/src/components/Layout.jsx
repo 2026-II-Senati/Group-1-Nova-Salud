@@ -24,7 +24,11 @@ const Layout = () => {
   const navigate = useNavigate();
   const haySesion = Boolean(localStorage.getItem("token"));
   const enlaces = esAdmin()
-    ? [...ENLACES, { a: "/usuarios", texto: "Usuarios" }]
+    ? [
+        ...ENLACES,
+        { a: "/predicciones", texto: "Predicciones" },
+        { a: "/usuarios", texto: "Usuarios" },
+      ]
     : ENLACES;
 
   const cerrarSesion = () => {
