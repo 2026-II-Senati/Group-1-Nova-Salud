@@ -72,7 +72,7 @@ INSERT INTO proveedores (nombre) VALUES
 ('Distribuidora Lima SAC'), ('Farmacéutica del Norte'), ('Import Pharma EIRL');
 
 INSERT INTO usuarios (nombre, email, password, rol_id) VALUES
-('Cristhian', 'admin@novasalud.com', '$2b$10$oZ7UaxqH4.EJaf4HBI2ylOSaHIy.BebAAVsBLJg9ar1qWL1L8V/MC', 1),
+('Admin', 'admin@novasalud.com', '$2b$10$oZ7UaxqH4.EJaf4HBI2ylOSaHIy.BebAAVsBLJg9ar1qWL1L8V/MC', 1),
 ('Vendedor Prueba', 'vendedor@novasalud.com', '$2b$10$oZ7UaxqH4.EJaf4HBI2ylOSaHIy.BebAAVsBLJg9ar1qWL1L8V/MC', 2);
 
 INSERT INTO productos (nombre, precio, stock, stock_minimo, categoria_id, proveedor_id) VALUES
