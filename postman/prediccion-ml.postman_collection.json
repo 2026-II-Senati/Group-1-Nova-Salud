@@ -1,0 +1,535 @@
+{
+  "info": {
+    "name": "Prediccion ML - Nova Salud (PS2I-98)",
+    "description": "Casos de /api/ml/prediccion. El endpoint recibe los 8 campos que espera el modelo y devuelve ventas_estimadas. El modelo predice UN dia, no un horizonte de 7 ni 30, por eso el body lleva los campos y no un horizonte. ANTES DE EJECUTAR: encender el microservicio (python api.py dentro de ml/, necesita modelo.pkl) y el backend. Ejecutar con Run en orden: el caso 01 hace login y guarda el token en la variable tokenAdmin; el caso 03 lo hace con un vendedor y guarda tokenVendedor. Para el 03 hace falta un usuario con rol vendedor y contraseña conocida. No incluye credenciales.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3100"
+    },
+    {
+      "key": "tokenAdmin",
+      "value": ""
+    },
+    {
+      "key": "tokenVendedor",
+      "value": ""
+    }
+  ],
+  "item": [
+    {
+      "name": "01. POST /api/auth/login (admin) - guarda tokenAdmin",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Responde 200\", function () {",
+              "  pm.response.to.have.status(200);",
+              "});",
+              "pm.test(\"Devuelve un token\", function () {",
+              "  const b = pm.response.json();",
+              "  pm.expect(b.token).to.be.a(\"string\").and.not.empty;",
+              "});",
+              "const cuerpo = pm.response.json();",
+              "if (cuerpo.token) { pm.collectionVariables.set(\"tokenAdmin\", cuerpo.token); }"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"admin@novasalud.com\",\n  \"password\": \"CAMBIAR\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/auth/login",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "auth",
+            "login"
+          ]
+        }
+      }
+    },
+    {
+      "name": "02. POST /api/ml/prediccion con token admin - 200 y un numero",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Responde 200\", function () {",
+              "  pm.response.to.have.status(200);",
+              "});",
+              "pm.test(\"Devuelve ventas_estimadas como numero\", function () {",
+              "  const b = pm.response.json();",
+              "  pm.expect(b.ventas_estimadas).to.be.a(\"number\");",
+              "  pm.expect(Number.isFinite(b.ventas_estimadas)).to.eql(true);",
+              "});",
+              "pm.test(\"Indica el origen de los datos\", function () {",
+              "  pm.expect(pm.response.json().origen_datos).to.include(\"Rossmann\");",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "Authorization",
+            "value": "Bearer {{tokenAdmin}}"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"ventas_ayer\": 500000,\n  \"ventas_hace_7_dias\": 480000,\n  \"promedio_7_dias\": 490000,\n  \"dia_semana\": 3,\n  \"mes\": 11,\n  \"dia_mes\": 15,\n  \"Promo\": 1,\n  \"SchoolHoliday\": 0\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/ml/prediccion",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "ml",
+            "prediccion"
+          ]
+        }
+      }
+    },
+    {
+      "name": "03. POST /api/auth/login (vendedor) - guarda tokenVendedor",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Responde 200\", function () {",
+              "  pm.response.to.have.status(200);",
+              "});",
+              "const cuerpo = pm.response.json();",
+              "if (cuerpo.token) { pm.collectionVariables.set(\"tokenVendedor\", cuerpo.token); }"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"vendedor@novasalud.com\",\n  \"password\": \"CAMBIAR\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/auth/login",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "auth",
+            "login"
+          ]
+        }
+      }
+    },
+    {
+      "name": "04. POST /api/ml/prediccion con token de vendedor - 403",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Responde 403\", function () {",
+              "  pm.response.to.have.status(403);",
+              "});",
+              "pm.test(\"Avisa que solo el administrador puede consultar\", function () {",
+              "  pm.expect(pm.response.json().message).to.include(\"administrador\");",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "Authorization",
+            "value": "Bearer {{tokenVendedor}}"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"ventas_ayer\": 500000,\n  \"ventas_hace_7_dias\": 480000,\n  \"promedio_7_dias\": 490000,\n  \"dia_semana\": 3,\n  \"mes\": 11,\n  \"dia_mes\": 15,\n  \"Promo\": 1,\n  \"SchoolHoliday\": 0\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/ml/prediccion",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "ml",
+            "prediccion"
+          ]
+        }
+      }
+    },
+    {
+      "name": "05. POST /api/ml/prediccion sin token - 401",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Responde 401\", function () {",
+              "  pm.response.to.have.status(401);",
+              "});",
+              "pm.test(\"Avisa que falta el token\", function () {",
+              "  pm.expect(pm.response.json().message).to.include(\"Token\");",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"ventas_ayer\": 500000,\n  \"ventas_hace_7_dias\": 480000,\n  \"promedio_7_dias\": 490000,\n  \"dia_semana\": 3,\n  \"mes\": 11,\n  \"dia_mes\": 15,\n  \"Promo\": 1,\n  \"SchoolHoliday\": 0\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/ml/prediccion",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "ml",
+            "prediccion"
+          ]
+        }
+      }
+    },
+    {
+      "name": "06. POST /api/ml/prediccion con token invalido - 401",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Responde 401\", function () {",
+              "  pm.response.to.have.status(401);",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "Authorization",
+            "value": "Bearer esto.no.es.un.token"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"ventas_ayer\": 500000,\n  \"ventas_hace_7_dias\": 480000,\n  \"promedio_7_dias\": 490000,\n  \"dia_semana\": 3,\n  \"mes\": 11,\n  \"dia_mes\": 15,\n  \"Promo\": 1,\n  \"SchoolHoliday\": 0\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/ml/prediccion",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "ml",
+            "prediccion"
+          ]
+        }
+      }
+    },
+    {
+      "name": "07. POST /api/ml/prediccion con un campo faltante - 400",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Responde 400\", function () {",
+              "  pm.response.to.have.status(400);",
+              "});",
+              "pm.test(\"Dice que campo falta\", function () {",
+              "  pm.expect(pm.response.json().message).to.include(\"ventas_hace_7_dias\");",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "Authorization",
+            "value": "Bearer {{tokenAdmin}}"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"ventas_ayer\": 500000\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/ml/prediccion",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "ml",
+            "prediccion"
+          ]
+        }
+      }
+    },
+    {
+      "name": "08. POST /api/ml/prediccion con Promo=2 - 400",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Responde 400\", function () {",
+              "  pm.response.to.have.status(400);",
+              "});",
+              "pm.test(\"Avisa que Promo debe valer 0 o 1\", function () {",
+              "  pm.expect(pm.response.json().message).to.include(\"Promo\");",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "Authorization",
+            "value": "Bearer {{tokenAdmin}}"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"ventas_ayer\": 500000,\n  \"ventas_hace_7_dias\": 480000,\n  \"promedio_7_dias\": 490000,\n  \"dia_semana\": 3,\n  \"mes\": 11,\n  \"dia_mes\": 15,\n  \"Promo\": 2,\n  \"SchoolHoliday\": 0\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/ml/prediccion",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "ml",
+            "prediccion"
+          ]
+        }
+      }
+    },
+    {
+      "name": "09. POST /api/ml/prediccion con ventas negativas - 400",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Responde 400\", function () {",
+              "  pm.response.to.have.status(400);",
+              "});",
+              "pm.test(\"Avisa que no puede ser negativo\", function () {",
+              "  pm.expect(pm.response.json().message).to.include(\"negativo\");",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "Authorization",
+            "value": "Bearer {{tokenAdmin}}"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"ventas_ayer\": -5,\n  \"ventas_hace_7_dias\": 480000,\n  \"promedio_7_dias\": 490000,\n  \"dia_semana\": 3,\n  \"mes\": 11,\n  \"dia_mes\": 15,\n  \"Promo\": 1,\n  \"SchoolHoliday\": 0\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/ml/prediccion",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "ml",
+            "prediccion"
+          ]
+        }
+      }
+    },
+    {
+      "name": "10. POST /api/ml/prediccion con el servicio de prediccion apagado - 503",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Responde 503\", function () {",
+              "  pm.response.to.have.status(503);",
+              "});",
+              "pm.test(\"Avisa que el servicio no esta disponible\", function () {",
+              "  pm.expect(pm.response.json().message).to.include(\"no está disponible\");",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "Authorization",
+            "value": "Bearer {{tokenAdmin}}"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"ventas_ayer\": 500000,\n  \"ventas_hace_7_dias\": 480000,\n  \"promedio_7_dias\": 490000,\n  \"dia_semana\": 3,\n  \"mes\": 11,\n  \"dia_mes\": 15,\n  \"Promo\": 1,\n  \"SchoolHoliday\": 0\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/ml/prediccion",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "ml",
+            "prediccion"
+          ]
+        }
+      }
+    }
+  ]
+}
