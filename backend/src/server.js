@@ -10,6 +10,7 @@ const proveedoresRoutes = require('./routes/proveedoresRoutes');
 const alertasRoutes = require('./routes/alertasRoutes');
 const dashboardRoutes = require('./routes/dashboardRoutes');
 const movimientosRoutes = require('./routes/movimientosRoutes');
+const mlRoutes = require('./routes/mlRoutes');
 
 const pool = require("./db");
 const { errores } = require("./utils/errors");
@@ -49,6 +50,7 @@ app.use('/api/proveedores', proveedoresRoutes);
 app.use('/api/alertas', alertasRoutes);
 app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/movimientos', movimientosRoutes);
+app.use('/api/ml', mlRoutes);
 
 // Respuestas de error con el formato comun { "message": "..." }
 app.use(errores.RUTA_NO_ENCONTRADA);
