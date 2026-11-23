@@ -489,6 +489,8 @@ Las evidencias de ramas, pull requests y del sprint en Jira se presentan en la s
 | **8\*. Encender el backend y pulsar Filtrar o Limpiar** | El aviso desaparece y la lista vuelve | Correcto |
 | **9. Respuesta 404 o 500 al pedir la lista** | Aviso de error, sin pantalla en blanco | Correcto (antes la pantalla quedaba en blanco) |
 
+**Módulo de predicción con Machine Learning.** El endpoint POST /api/ml/prediccion se probó con una colección Postman de 10 casos que cubren el camino válido y los rechazos: inicio de sesión de administrador y de vendedor, predicción con cada rol, petición sin token, con token inválido, con un campo faltante, con Promo fuera de rango, con ventas negativas y con el servicio de predicción apagado. Los 10 casos quedaron funcionales: 200 con ventas_estimadas 9339682.29 para el administrador, 403 para el vendedor, 401 sin token y con token inválido, 400 en las tres validaciones de entrada y 503 cuando el servicio de predicción no está disponible. El detalle está en documentacion/pruebas_modulo_ml.md.
+
 **Limitaciones.** No se probó la carga con varios usuarios a la vez, el funcionamiento en navegadores distintos ni en dispositivos móviles reales. Las pruebas se ejecutaron en entorno local contra la base de datos de Aiven.
 
 **Postman: GET /api/productos responde 200 OK.**
@@ -498,6 +500,10 @@ Las evidencias de ramas, pull requests y del sprint en Jira se presentan en la s
 **Postman: venta con cantidad mayor al stock responde 400.**
 
 ![Postman: venta con cantidad mayor al stock responde 400](img/postman-venta-400.png)
+
+**Postman: la predicción del módulo ML responde 200 con las ventas estimadas.**
+
+![Postman: la predicción del módulo ML responde 200 con las ventas estimadas](img/postman-ps2i98-caso-02.jpeg)
 
 **Pantalla de alertas con los productos bajo el stock mínimo.**
 
