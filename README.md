@@ -23,7 +23,7 @@
 ## Stack
 - Frontend: React + Vite + Tailwind CSS
 - Backend: Node.js + Express
-- Base de datos: MySQL en Aiven
+- Base de datos: TiDB Cloud (MySQL Compatible), AWS São Paulo
 - Autenticación: JWT
 - Servicio de ML: Python + FastAPI (scikit-learn)
 
@@ -41,7 +41,10 @@ database/   script SQL con tablas y datos de prueba
 docs/       contrato de la API
 
 ## Base de datos
-El script está en `database/nova_salud.sql`.
+La base corre en TiDB Cloud, modo MySQL Compatible, región AWS São Paulo
+(sa-east-1). Se conecta igual que MySQL, con el puerto 4000.
+
+El script está en `database/nova-salud.sql`.
 Crea las 8 tablas y carga los datos de prueba.
 
 Las credenciales van en `backend/.env` (no se sube al repositorio).
@@ -100,8 +103,8 @@ Debe responder `{"ventas_estimadas": <número>}`.
 ## Docker
 
 El proyecto se levanta con Docker Compose: backend en el puerto 3000, frontend en
-el 5173 y el servicio de ML en el 8000. La base sigue en Aiven, no se levanta un
-contenedor de MySQL.
+el 5173 y el servicio de ML en el 8000. La base está en TiDB Cloud, no se levanta
+un contenedor de base de datos.
 
 ### Requisitos
 - Docker Desktop con Docker Compose v2 (`docker compose version`)
@@ -117,8 +120,8 @@ Si todavía no lo tienes, pídelo al equipo, o créalo a partir de la plantilla
 `backend/.env.example`, completando los valores:
 
     PORT=3000
-    DB_HOST=<host de Aiven>
-    DB_PORT=<puerto de Aiven>
+    DB_HOST=<host de TiDB Cloud>
+    DB_PORT=4000
     DB_USER=<usuario>
     DB_PASSWORD=<contraseña>
     DB_NAME=nova_salud
