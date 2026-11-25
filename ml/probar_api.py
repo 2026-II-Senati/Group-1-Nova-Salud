@@ -9,9 +9,8 @@ datos_prueba = {
     "dia_semana": 3,
     "mes": 11,
     "dia_mes": 15,
-    "clientes_totales": 20000,
-    "Promo": 1,            # <-- Mayúscula
-    "SchoolHoliday": 0     # <-- Mayúscula
+    "Promo": 1,
+    "SchoolHoliday": 0
 }
 
 print("Enviando datos al modelo...")

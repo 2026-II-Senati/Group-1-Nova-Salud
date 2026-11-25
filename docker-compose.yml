@@ -16,3 +16,10 @@ services:
     depends_on:
       - backend
     restart: unless-stopped
+
+  ml:
+    build: ./ml
+    container_name: nova-ml
+    ports:
+      - "8000:8000"
+    restart: unless-stopped
